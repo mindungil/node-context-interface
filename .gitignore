@@ -1,0 +1,2 @@
+# server 폴더 내의 .env 파일을 무시
+server/.env
