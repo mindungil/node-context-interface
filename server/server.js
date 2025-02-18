@@ -22,9 +22,9 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [
-        { role: "system", content: "사용자가 알기 쉽게 마크다운 형식으로 답변을 정리해서 보내줘"},
+        // { role: "system", content: "사용자가 알기 쉽게 마크다운 형식으로 답변을 정리해서 보내줘. 근데 마크다운으로 정리했다고 하거"},
         ...previousMessages,  
         { role: 'user', content: userPrompt }
       ],
@@ -38,4 +38,8 @@ app.post('/api/chat', async (req, res) => {
     console.error('Error generating response:', error);
     res.status(500).send('Internal Server Error');
   }
+});
+
+app.listen(8080, function () {
+  console.log('Server is listening on port 8080');
 });
