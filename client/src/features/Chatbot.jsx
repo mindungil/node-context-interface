@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
+import { useDispatch, useSelector } from "react-redux"; 
 import { sendMessageToApi } from "../services/chatbotService.js";
 import DialogBox from "../components/textBox/DialogBox.jsx";
 
@@ -60,6 +61,7 @@ function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
+  const dispatch = useDispatch();
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -74,6 +76,8 @@ function Chatbot() {
   const handleSend = async () => {
     if (input.trim() === "") return;
 
+    console.log("실행됨");
+
     const userMessage = { role: "user", content: input, isStep: null };
     let updatedMessages = [...messages, userMessage];
 
@@ -81,7 +85,9 @@ function Chatbot() {
     setInput("");
 
     try {
-      const gptMessageContent = await sendMessageToApi(input, updatedMessages);
+      const gptMessageContent = await sendMessageToApi(input, updatedMessages, dispatch);
+
+      console.log("호출후응답")
       const gptMessage = { role: "assistant", content: gptMessageContent, isStep: null };
       updatedMessages = [...updatedMessages, gptMessage];
 
