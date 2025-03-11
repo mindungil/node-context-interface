@@ -29,19 +29,22 @@ app.post('/api/chat', async (req, res) => {
         { role: 'user', content: userPrompt },
         { 
           role: "system", 
-          content: "사용자의 질문과 GPT의 답변을 기반으로 관련된 키워드를 단 1개만 추출해서 JSON 형식으로 반환해 주세요. JSON 형식 예시는 다음과 같습니다:\n\n```json\n{\n  \"response\": \"GPT의 답변 내용\",\n  \"keywords\": \"키워드\"\n}\n```"
+          content: "사용자의 질문과 GPT의 답변을 기반으로 관련된 키워드를 단 1개만 추출해서 JSON 형식으로 반환해 주세요. JSON 형식 예시는 다음과 같습니다:\n\n```json\n{\n  \"response\": \"GPT의 답변 내용\",\n  \"keyword\": \"키워드\"\n}\n```"
         }
       ],
       max_tokens: 800,
-      response_format: { type: "json_object" } // 🔥 수정된 부분!
+      response_format: { type: "json_object" } 
     });
 
     const gptResult = response.choices[0].message.content;
     const parsedResult = JSON.parse(gptResult); 
-    const gptResponse = parsedResult.response; 
+    const gptResponse = parsedResult.response;
+    const keyword = parsedResult.keyword; 
     console.log('GPT Result:', gptResult);
+    console.log('keyword:', keyword);
 
-    res.json({ message: gptResponse }); 
+    res.json({ message: gptResponse, keyword});
+     
   } catch (error) {
     console.error('Error generating response:', error);
     res.status(500).send('Internal Server Error');

@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import styled from "styled-components";
 import ForceGraph2D from "react-force-graph-2d";
+import { useSelector } from "react-redux";
 
 const GraphContainer = styled.div`
   display: flex;
@@ -14,6 +15,27 @@ function Graph() {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 500, height: 500 });
 
+  // 🔹 Redux에서 keyword 리스트 가져오기
+  const keywords = useSelector((state) => state.keyword);
+
+  // 🔹 keywords를 그래프 데이터로 변환
+  const graphData = useMemo(() => {
+    if (!keywords.length) return { nodes: [], links: [] };
+
+    const nodes = keywords.map((keyword, index) => ({
+      id: `node${index}`,
+      name: keyword,
+      val: 10 + index * 2, // 노드 크기 조정
+    }));
+
+    const links = nodes.slice(1).map((node, index) => ({
+      source: nodes[index].id,
+      target: node.id,
+    }));
+
+    return { nodes, links };
+  }, [keywords]);
+
   useEffect(() => {
     if (containerRef.current) {
       setDimensions({
@@ -21,7 +43,7 @@ function Graph() {
         height: containerRef.current.clientHeight,
       });
     }
-    // Resize 이벤트 감지
+
     const handleResize = () => {
       if (containerRef.current) {
         setDimensions({
@@ -30,71 +52,62 @@ function Graph() {
         });
       }
     };
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const data = {
-    nodes: [
-      { id: "node1", name: "ML 수업 설명 요청", val: 12 },
-      { id: "node2", name: "선형 분리", val: 8 },
-      { id: "node3", name: "Hard margin SVM", val: 10 },
-    ],
-    links: [
-      { source: "node1", target: "node2" },
-      { source: "node2", target: "node3" },
-    ],
-  };
-
   return (
     <GraphContainer ref={containerRef}>
-      <ForceGraph2D
-        ref={graphRef}
-        width={dimensions.width}
-        height={dimensions.height}
-        graphData={data}
-        nodeAutoColorBy="id"
-        linkColor={() => "rgba(200,200,200,0.5)"} // 🔹 링크 색상 변경
-        linkWidth={1.5} // 🔹 선 굵기 조절
-        nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.name;
-          const fontSize = Math.max(12 / globalScale, 8);
-          const padding = 6;
-          const textWidth = ctx.measureText(label).width;
-          const nodeWidth = textWidth + padding * 2;
-          const nodeHeight = fontSize + padding * 2;
-          
-          // 🔹 둥근 노드 배경
-          ctx.fillStyle = "white";
-          ctx.strokeStyle = "rgba(0,0,0,0.1)";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, 10);
-          ctx.fill();
-          ctx.stroke();
+      {graphData.nodes.length > 0 ? (
+        <ForceGraph2D
+          ref={graphRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          graphData={graphData} // 🔹 Redux에서 변환된 데이터 적용
+          nodeAutoColorBy="id"
+          linkColor={() => "rgba(200,200,200,0.5)"}
+          linkWidth={1.5}
+          nodeCanvasObject={(node, ctx, globalScale) => {
+            const label = node.name;
+            const fontSize = Math.max(12 / globalScale, 8);
+            const padding = 6;
+            const textWidth = ctx.measureText(label).width;
+            const nodeWidth = textWidth + padding * 2;
+            const nodeHeight = fontSize + padding * 2;
 
-          // 🔹 텍스트 스타일 적용
-          ctx.font = `${fontSize}px Sans-Serif`;
-          ctx.fillStyle = "black";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(label, node.x, node.y);
-        }}
-        nodePointerAreaPaint={(node, color, ctx) => {
-          const label = node.name;
-          const padding = 6;
-          const textWidth = ctx.measureText(label).width;
-          const nodeWidth = textWidth + padding * 2;
-          const nodeHeight = 20;
-          
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, 10);
-          ctx.fill();
-        }}
-        d3AlphaDecay={0.02} 
-        d3VelocityDecay={0.3} 
-      />
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = "rgba(0,0,0,0.1)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.font = `${fontSize}px Sans-Serif`;
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, node.x, node.y);
+          }}
+          nodePointerAreaPaint={(node, color, ctx) => {
+            const label = node.name;
+            const padding = 6;
+            const textWidth = ctx.measureText(label).width;
+            const nodeWidth = textWidth + padding * 2;
+            const nodeHeight = 20;
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, 10);
+            ctx.fill();
+          }}
+          d3AlphaDecay={0.02}
+          d3VelocityDecay={0.3}
+        />
+      ) : (
+        <p></p>
+      )}
     </GraphContainer>
   );
 }
