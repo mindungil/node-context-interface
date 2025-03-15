@@ -15,26 +15,26 @@ function Graph() {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 500, height: 500 });
 
-  // 🔹 Redux에서 keyword 리스트 가져오기
-  const keywords = useSelector((state) => state.keyword);
+  // 🔹 Redux에서 nodes 가져오기
+  const nodesData = useSelector((state) => state.node.nodes) || {};
 
-  // 🔹 keywords를 그래프 데이터로 변환
+  // 🔹 nodes를 그래프 데이터로 변환
   const graphData = useMemo(() => {
-    if (!keywords.length) return { nodes: [], links: [] };
-
-    const nodes = keywords.map((keyword, index) => ({
-      id: `node${index}`,
-      name: keyword,
-      val: 10 + index * 2, // 노드 크기 조정
+    const nodes = Object.values(nodesData).map((node) => ({
+      id: node.id,
+      name: node.keyword,
+      val: 10, // 노드 크기 조정
     }));
 
-    const links = nodes.slice(1).map((node, index) => ({
-      source: nodes[index].id,
-      target: node.id,
-    }));
+    const links = Object.values(nodesData)
+      .filter((node) => node.parent)
+      .map((node) => ({
+        source: node.parent,
+        target: node.id,
+      }));
 
     return { nodes, links };
-  }, [keywords]);
+  }, [nodesData]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -106,7 +106,7 @@ function Graph() {
           d3VelocityDecay={0.3}
         />
       ) : (
-        <p></p>
+        <p>No Data</p>
       )}
     </GraphContainer>
   );

@@ -1,8 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import keywordReducer from "./slices/keywordSlice";
+import nodeReducer from "./slices/nodeSlice";
 
 export const store = configureStore({
   reducer: {
-    keyword: keywordReducer,
+    node: nodeReducer,
   },
 });
