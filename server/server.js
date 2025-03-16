@@ -67,17 +67,37 @@ app.post('/api/update-graph', async (req, res) => {
         { role: 'system', content: `
           1. 사용자의 대화 맥락을 고려하여 새로운 키워드가 어디에 연결되어야 하는지 판단해줘.
           2. 기존 노드 중 가장 연관성이 높은 노드를 부모 노드로 선택해야 해.
-          3. 부모 노드의 ID만 단순한 텍스트로 반환하고, 다른 설명은 포함하지 마.
+          3. 부모-자식 간의 관계(온톨로지)를 설정해줘. 하지만 관계는 한 단어 또는 짧은 구로만 표현해야 해.
         `},
         { role: 'user', content: `현재 그래프 상태: ${JSON.stringify(safeNodes)}` },
         { role: 'user', content: `현재 존재하는 노드 목록: ${JSON.stringify(existingKeywords)}` },
         { role: 'user', content: `최근 대화 키워드: ${JSON.stringify({ keyword, userMessage, gptMessage })}` },
-        { role: 'user', content: "새로운 노드를 연결할 부모 노드의 ID만 반환해." }
+        { role: 'user', content: `반드시 JSON 형식으로 응답하세요.
+          ✅ 올바른 JSON 응답 예시:
+          \`\`\`json
+          {
+            "parentNodeId": "art-1",
+            "relation": "작품"
+          }
+          \`\`\`
+
+          JSON 이외의 응답을 하면 안 됩니다.
+        ` }
       ],
-      max_tokens: 50
+      max_tokens: 500,
+      response_format: { type: "json_object" } 
     });
 
-    let parentNodeId = response.choices[0].message.content.trim();
+    const gptResult = response.choices[0].message.content.trim();
+    console.log("📌 GPT 응답 원본:", gptResult);
+    const parsedResult = JSON.parse(gptResult);
+
+      // JSON이 유효한지 검사
+  if (!gptResult || gptResult.length === 0) {
+    throw new Error("GPT 응답이 비어 있음");
+  }
+
+    let parentNodeId = parsedResult.parentNodeId?.trim() || "root";
 
     // ✅ parentNode가 기존 노드 목록에 없으면 자동 보정
     if (!Object.keys(safeNodes).includes(parentNodeId)) {
