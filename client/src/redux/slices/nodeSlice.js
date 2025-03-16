@@ -2,46 +2,40 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const nodeSlice = createSlice({
   name: "node",
-  initialState: { nodes: {} }, // 🔹 빈 객체로 초기화
+  initialState: { nodes: {} },
+
   reducers: {
     addOrUpdateNode: (state, action) => {
-      const { keyword, userMessage, gptMessage } = action.payload;
-      const existingNodeKey = Object.keys(state.nodes).find(
-        (key) => state.nodes[key].keyword === keyword
-      );
+      const { id, keyword, userMessage, gptMessage } = action.payload;
 
-      if (existingNodeKey) {
-        // 🔹 기존 노드가 있으면 dialog 추가
-        const dialogLength = Object.keys(state.nodes[existingNodeKey].dialog).length + 1;
-        state.nodes[existingNodeKey].dialog[dialogLength] = { userMessage, gptMessage };
-      } else {
-        // 🔹 새로운 노드 추가
-        const newNodeId = `node${Object.keys(state.nodes).length + 1}`;
-
-        state.nodes[newNodeId] = {
-          id: newNodeId,
-          active: Object.keys(state.nodes).length === 0, // 첫 노드는 루트 역할
+      if (!state.nodes[id]) {
+        state.nodes[id] = {
+          id,
           keyword,
+          parent: null,
           children: [],
-          parent: null, // 🔹 부모가 없으면 기본값을 `null`로 설정
-          dialog: {
-            1: { userMessage, gptMessage },
-          },
+          dialog: { 1: { userMessage, gptMessage } }
         };
+      } else {
+        const dialogLength = Object.keys(state.nodes[id].dialog).length + 1;
+        state.nodes[id].dialog[dialogLength] = { userMessage, gptMessage };
       }
     },
+
     setParentNode: (state, action) => {
       const { nodeId, parentId } = action.payload;
+
       if (state.nodes[nodeId] && state.nodes[parentId]) {
         state.nodes[nodeId].parent = parentId;
         state.nodes[parentId].children.push(nodeId);
+        console.log(`✅ ${nodeId}이(가) ${parentId}에 연결됨.`);
+      } else {
+        console.warn(`⚠️ setParentNode 실행 실패 - nodeId: ${nodeId}, parentId: ${parentId}`);
       }
-    },
-    resetNodes: (state) => {
-      state.nodes = {}; // 🔹 전체 상태 초기화
-    },
+    }
   },
 });
 
-export const { addOrUpdateNode, setParentNode, resetNodes } = nodeSlice.actions;
+export const { addOrUpdateNode, setParentNode } = nodeSlice.actions;
 export default nodeSlice.reducer;
+

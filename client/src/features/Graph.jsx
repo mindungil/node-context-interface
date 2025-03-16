@@ -7,7 +7,8 @@ const GraphContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  width: 100%;
+  height: 100%;
 `;
 
 function Graph() {
@@ -18,16 +19,18 @@ function Graph() {
   // 🔹 Redux에서 nodes 가져오기
   const nodesData = useSelector((state) => state.node.nodes) || {};
 
-  // 🔹 nodes를 그래프 데이터로 변환
+  // 🔹 nodes를 그래프 데이터로 변환 (랜덤 초기 좌표 추가)
   const graphData = useMemo(() => {
     const nodes = Object.values(nodesData).map((node) => ({
       id: node.id,
       name: node.keyword,
-      val: 10, // 노드 크기 조정
+      val: 10,
+      x: node.x ?? Math.random() * 500, // 랜덤 위치 설정
+      y: node.y ?? Math.random() * 500, // 랜덤 위치 설정
     }));
 
     const links = Object.values(nodesData)
-      .filter((node) => node.parent)
+      .filter((node) => node.parent !== null && nodesData[node.parent]) // 부모가 있는 노드만 처리
       .map((node) => ({
         source: node.parent,
         target: node.id,
@@ -36,25 +39,27 @@ function Graph() {
     return { nodes, links };
   }, [nodesData]);
 
+  // 🔹 창 크기 변경 감지하여 그래프 크기 업데이트
   useEffect(() => {
-    if (containerRef.current) {
-      setDimensions({
-        width: containerRef.current.clientWidth,
-        height: containerRef.current.clientHeight,
-      });
-    }
-
-    const handleResize = () => {
+    const updateSize = () => {
       if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        });
+        const { clientWidth, clientHeight } = containerRef.current;
+        setDimensions({ width: clientWidth, height: clientHeight });
+        
+        // 🔥 그래프가 축소된 상태에서 고정되는 문제 해결
+        if (graphRef.current) {
+          graphRef.current.zoomToFit(500, 50); // 그래프를 다시 맞춤
+        }
       }
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    // 초기 크기 설정
+    updateSize();
+
+    // 윈도우 크기 변경 이벤트 리스너 추가
+    window.addEventListener("resize", updateSize);
+    
+    return () => window.removeEventListener("resize", updateSize);
   }, []);
 
   return (

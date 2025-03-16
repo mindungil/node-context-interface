@@ -85,7 +85,7 @@ function Chatbot() {
     setInput("");
 
     try {
-      const gptMessageContent = await sendMessageToApi(input, updatedMessages, dispatch);
+      const gptMessageContent = await dispatch(sendMessageToApi(input, updatedMessages));
 
       console.log("호출후응답")
       const gptMessage = { role: "assistant", content: gptMessageContent, isStep: null };
@@ -107,7 +107,7 @@ function Chatbot() {
     <ChatContainer>
       <MessagesContainer>
         {messages.map((msg, index) => (
-          <DialogBox key={index} text={msg.content} isUser={msg.role === "user"} isStep={msg.isStep} />
+          <DialogBox key={index} text={msg.content} isUser={msg.role === "user"} />
         ))}
         <div ref={messagesEndRef} />
       </MessagesContainer>
