@@ -20,14 +20,17 @@ function Graph() {
   // 🔹 Redux에서 nodes 가져오기
   const nodesData = useSelector((state) => state.node.nodes) || {};
 
-  // 🔹 nodes를 그래프 데이터로 변환 (랜덤 초기 좌표 추가)
+  // 🔹 nodes를 그래프 데이터로 변환 (초기 좌표 설정)
   const graphData = useMemo(() => {
+    const centerX = dimensions.width / 2;
+    const centerY = dimensions.height / 2;
+
     const nodes = Object.values(nodesData).map((node) => ({
       id: node.id,
       name: node.keyword,
       val: 10,
-      x: node.x ?? Math.random() * 800,
-      y: node.y ?? Math.random() * 400,
+      x: node.id === "root" ? centerX : node.x ?? Math.random() * 800,
+      y: node.id === "root" ? centerY : node.y ?? Math.random() * 400,
     }));
 
     const links = Object.values(nodesData)
@@ -39,7 +42,7 @@ function Graph() {
       }));
 
     return { nodes, links };
-  }, [nodesData]);
+  }, [nodesData, dimensions]);
 
   // 🔹 창 크기 변경 감지하여 그래프 크기 업데이트
   useEffect(() => {
@@ -59,14 +62,31 @@ function Graph() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // 🔹 d3Force 설정 (노드 간 거리 조정 + 충돌 방지)
+  // 🔹 d3Force 설정 (노드 간 거리 조정 + 충돌 방지 + 중앙 정렬)
   useEffect(() => {
     if (graphRef.current) {
-      graphRef.current.d3Force("charge", d3.forceManyBody().strength(-600)); // 🔹 노드 간 거리 증가
-      graphRef.current.d3Force("link", d3.forceLink().distance(100)); // 🔹 간선 길이 증가
-      graphRef.current.d3Force("collide", d3.forceCollide(50)); // 🔹 노드 간 충돌 방지
+      const centerX = dimensions.width / 2;
+      const centerY = dimensions.height / 2;
+
+      graphRef.current
+        .d3Force("charge", d3.forceManyBody().strength(-80)) // 🔥 노드 반발력 줄이기
+        .d3Force("link", d3.forceLink().distance(40).strength(1.5)) // 🔥 간선 길이 더 짧게 & 탄탄하게
+        .d3Force("collide", d3.forceCollide(30)) // 🔹 충돌 방지
+        .d3Force("center", d3.forceCenter(centerX, centerY)); // 🔥 그래프 전체를 화면 중앙으로 이동
+    
+    
+      }
+  }, [graphData, dimensions]);
+
+  // 🔹 Root 노드를 항상 화면 중앙에 배치
+  useEffect(() => {
+    if (graphRef.current) {
+      setTimeout(() => {
+        graphRef.current.centerAt(dimensions.width / 2, dimensions.height / 2, 1000);
+        graphRef.current.zoom(1);
+      }, 500);
     }
-  }, [graphData]);
+  }, [graphData, dimensions]);
 
   return (
     <GraphContainer ref={containerRef}>
@@ -82,6 +102,9 @@ function Graph() {
           linkDirectionalArrowLength={6}
           linkDirectionalArrowRelPos={1}
           nodeRelSize={8}
+          onNodeDragEnd={(node) => {
+            console.log(`${node.id} 이동됨: (${node.x}, ${node.y})`);
+          }}
           linkCanvasObjectMode={() => "after"}
           linkCanvasObject={(link, ctx, globalScale) => {
             const label = link.relation;
@@ -101,14 +124,14 @@ function Graph() {
           nodeCanvasObject={(node, ctx, globalScale) => {
             const label = node.name;
             const fontSize = Math.max(16 / globalScale, 10);
-            const paddingX = 20; // 🔹 좌우 패딩 조정
-            const paddingY = 10; // 🔹 상하 패딩 조정
+            const paddingX = 20;
+            const paddingY = 10;
             const textWidth = ctx.measureText(label).width;
             const nodeWidth = textWidth + paddingX * 2;
             const nodeHeight = fontSize + paddingY * 2;
-            const borderRadius = nodeHeight / 2; // 🔹 캡슐 형태 유지
+            const borderRadius = nodeHeight / 2;
 
-            ctx.fillStyle = "white";
+            ctx.fillStyle = node.id === "root" ? "#ffcc00" : "white"; // 🔥 Root는 노란색
             ctx.strokeStyle = "rgba(0,0,0,0.2)";
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -122,8 +145,8 @@ function Graph() {
             ctx.textBaseline = "middle";
             ctx.fillText(label, node.x, node.y);
           }}
-          d3AlphaDecay={0.02}
-          d3VelocityDecay={0.6}
+          d3AlphaDecay={0.05} // 🔥 그래프 튕김 방지
+          d3VelocityDecay={0.5} // 🔥 노드의 이동 속도를 점진적으로 줄임
         />
       ) : (
         <p>No Data</p>

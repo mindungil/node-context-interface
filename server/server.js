@@ -84,7 +84,7 @@ app.post('/api/update-graph', async (req, res) => {
           JSON 이외의 응답을 하면 안 됩니다.
         ` }
       ],
-      max_tokens: 500,
+      max_tokens: 800,
       response_format: { type: "json_object" } 
     });
 
