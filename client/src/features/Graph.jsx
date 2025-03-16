@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from "react";
 import styled from "styled-components";
 import ForceGraph2D from "react-force-graph-2d";
 import { useSelector } from "react-redux";
+import * as d3 from "d3";
 
 const GraphContainer = styled.div`
   display: flex;
@@ -14,7 +15,7 @@ const GraphContainer = styled.div`
 function Graph() {
   const graphRef = useRef(null);
   const containerRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 500, height: 500 });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
 
   // 🔹 Redux에서 nodes 가져오기
   const nodesData = useSelector((state) => state.node.nodes) || {};
@@ -25,15 +26,16 @@ function Graph() {
       id: node.id,
       name: node.keyword,
       val: 10,
-      x: node.x ?? Math.random() * 500, // 랜덤 위치 설정
-      y: node.y ?? Math.random() * 500, // 랜덤 위치 설정
+      x: node.x ?? Math.random() * 800,
+      y: node.y ?? Math.random() * 400,
     }));
 
     const links = Object.values(nodesData)
-      .filter((node) => node.parent !== null && nodesData[node.parent]) // 부모가 있는 노드만 처리
+      .filter((node) => node.parent !== null && nodesData[node.parent])
       .map((node) => ({
         source: node.parent,
         target: node.id,
+        relation: node.relation || "관련",
       }));
 
     return { nodes, links };
@@ -45,22 +47,26 @@ function Graph() {
       if (containerRef.current) {
         const { clientWidth, clientHeight } = containerRef.current;
         setDimensions({ width: clientWidth, height: clientHeight });
-        
-        // 🔥 그래프가 축소된 상태에서 고정되는 문제 해결
+
         if (graphRef.current) {
-          graphRef.current.zoomToFit(500, 50); // 그래프를 다시 맞춤
+          graphRef.current.zoomToFit(500, 50);
         }
       }
     };
 
-    // 초기 크기 설정
     updateSize();
-
-    // 윈도우 크기 변경 이벤트 리스너 추가
     window.addEventListener("resize", updateSize);
-    
     return () => window.removeEventListener("resize", updateSize);
   }, []);
+
+  // 🔹 d3Force 설정 (노드 간 거리 조정 + 충돌 방지)
+  useEffect(() => {
+    if (graphRef.current) {
+      graphRef.current.d3Force("charge", d3.forceManyBody().strength(-600)); // 🔹 노드 간 거리 증가
+      graphRef.current.d3Force("link", d3.forceLink().distance(100)); // 🔹 간선 길이 증가
+      graphRef.current.d3Force("collide", d3.forceCollide(50)); // 🔹 노드 간 충돌 방지
+    }
+  }, [graphData]);
 
   return (
     <GraphContainer ref={containerRef}>
@@ -69,23 +75,44 @@ function Graph() {
           ref={graphRef}
           width={dimensions.width}
           height={dimensions.height}
-          graphData={graphData} // 🔹 Redux에서 변환된 데이터 적용
+          graphData={graphData}
           nodeAutoColorBy="id"
           linkColor={() => "rgba(200,200,200,0.5)"}
           linkWidth={1.5}
+          linkDirectionalArrowLength={6}
+          linkDirectionalArrowRelPos={1}
+          nodeRelSize={8}
+          linkCanvasObjectMode={() => "after"}
+          linkCanvasObject={(link, ctx, globalScale) => {
+            const label = link.relation;
+            if (!label) return;
+
+            const fontSize = Math.max(14 / globalScale, 8);
+            ctx.font = `${fontSize}px Sans-Serif`;
+            ctx.fillStyle = "rgba(50, 50, 50, 0.9)";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            const midX = (link.source.x + link.target.x) / 2;
+            const midY = (link.source.y + link.target.y) / 2;
+
+            ctx.fillText(label, midX, midY);
+          }}
           nodeCanvasObject={(node, ctx, globalScale) => {
             const label = node.name;
-            const fontSize = Math.max(12 / globalScale, 8);
-            const padding = 6;
+            const fontSize = Math.max(16 / globalScale, 10);
+            const paddingX = 20; // 🔹 좌우 패딩 조정
+            const paddingY = 10; // 🔹 상하 패딩 조정
             const textWidth = ctx.measureText(label).width;
-            const nodeWidth = textWidth + padding * 2;
-            const nodeHeight = fontSize + padding * 2;
+            const nodeWidth = textWidth + paddingX * 2;
+            const nodeHeight = fontSize + paddingY * 2;
+            const borderRadius = nodeHeight / 2; // 🔹 캡슐 형태 유지
 
             ctx.fillStyle = "white";
-            ctx.strokeStyle = "rgba(0,0,0,0.1)";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, 10);
+            ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, borderRadius);
             ctx.fill();
             ctx.stroke();
 
@@ -95,20 +122,8 @@ function Graph() {
             ctx.textBaseline = "middle";
             ctx.fillText(label, node.x, node.y);
           }}
-          nodePointerAreaPaint={(node, color, ctx) => {
-            const label = node.name;
-            const padding = 6;
-            const textWidth = ctx.measureText(label).width;
-            const nodeWidth = textWidth + padding * 2;
-            const nodeHeight = 20;
-
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.roundRect(node.x - nodeWidth / 2, node.y - nodeHeight / 2, nodeWidth, nodeHeight, 10);
-            ctx.fill();
-          }}
           d3AlphaDecay={0.02}
-          d3VelocityDecay={0.3}
+          d3VelocityDecay={0.6}
         />
       ) : (
         <p>No Data</p>

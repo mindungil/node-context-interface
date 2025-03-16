@@ -88,31 +88,43 @@ app.post('/api/update-graph', async (req, res) => {
       response_format: { type: "json_object" } 
     });
 
-    const gptResult = response.choices[0].message.content.trim();
-    console.log("📌 GPT 응답 원본:", gptResult);
-    const parsedResult = JSON.parse(gptResult);
+    // ✅ GPT 응답을 안전하게 가져오기
+    let gptResult = response.choices[0]?.message?.content?.trim();
+    
+    if (!gptResult) {
+      console.error("🚨 GPT 응답이 비어 있음!");
+      return res.status(500).json({ error: "GPT 응답이 비어 있습니다." });
+    }
 
-      // JSON이 유효한지 검사
-  if (!gptResult || gptResult.length === 0) {
-    throw new Error("GPT 응답이 비어 있음");
-  }
+    console.log("📌 GPT 응답 원본:", gptResult);
+
+    // ✅ JSON 파싱 시 예외 처리
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(gptResult);
+    } catch (parseError) {
+      console.error("🚨 JSON 파싱 오류:", parseError);
+      return res.status(500).json({ error: "GPT 응답을 JSON으로 변환하는 중 오류 발생" });
+    }
 
     let parentNodeId = parsedResult.parentNodeId?.trim() || "root";
+    let relation = parsedResult.relation?.trim() || "관련";
 
-    // ✅ parentNode가 기존 노드 목록에 없으면 자동 보정
+    // ✅ parentNodeId가 기존 노드 목록에 없으면 자동 보정
     if (!Object.keys(safeNodes).includes(parentNodeId)) {
       parentNodeId = Object.keys(safeNodes).find(key => keyword.includes(safeNodes[key].keyword)) || "root";
     }
 
-    console.log(`✅ 선택된 부모 노드: ${parentNodeId}`);
+    console.log(`✅ 선택된 부모 노드: ${parentNodeId}, 관계: ${relation}`);
     
-    res.send(parentNodeId);
+    res.json({ parentNodeId, relation });
     
   } catch (error) {
-    console.error('Error in Graph Update:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error in Graph Update:", error);
+    res.status(500).json({ error: "서버 내부 오류 발생" });
   }
 });
+
 
 app.listen(8080, function () {
   console.log('Server is listening on port 8080');
