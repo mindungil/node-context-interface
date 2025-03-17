@@ -85,6 +85,7 @@ app.post('/api/update-graph', async (req, res) => {
         ` }
       ],
       max_tokens: 800,
+      temperature: 0.2,
       response_format: { type: "json_object" } 
     });
 
