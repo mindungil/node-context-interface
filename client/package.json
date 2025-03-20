@@ -19,6 +19,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.5",
     "react-scripts": "5.0.1",
+    "reactflow": "^11.11.4",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "styled-components": "^6.1.15",

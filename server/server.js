@@ -52,7 +52,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.post('/api/update-graph', async (req, res) => {  
-  const { nodes, history, keyword, userMessage, gptMessage } = req.body;  
+  const { nodes, keyword, userMessage, gptMessage } = req.body;  
 
   const safeNodes = nodes || {};
   const existingKeywords = Object.values(safeNodes).map(node => node.keyword);
@@ -65,7 +65,7 @@ app.post('/api/update-graph', async (req, res) => {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: `
-          1. 사용자의 대화 맥락을 고려하여 새로운 키워드가 어디에 연결되어야 하는지 판단해줘.
+          1. 사용자의 대화 맥락을 고려하여 새로운 키워드(${keyword})가 어디에 연결되어야 하는지 판단해줘.
           2. 기존 노드 중 가장 연관성이 높은 노드를 부모 노드로 선택해야 해.
           3. 부모-자식 간의 관계(온톨로지)를 설정해줘. 하지만 관계는 한 단어 또는 짧은 구로만 표현해야 해.
         `},
@@ -80,8 +80,6 @@ app.post('/api/update-graph', async (req, res) => {
             "relation": "작품"
           }
           \`\`\`
-
-          JSON 이외의 응답을 하면 안 됩니다.
         ` }
       ],
       max_tokens: 800,
@@ -89,6 +87,9 @@ app.post('/api/update-graph', async (req, res) => {
       response_format: { type: "json_object" } 
     });
 
+     // ✅ GPT 응답 원본 출력
+     console.log("\n📌 [GPT 응답 원본 - /api/update-graph]:", response.choices[0].message.content);
+     
     // ✅ GPT 응답을 안전하게 가져오기
     let gptResult = response.choices[0]?.message?.content?.trim();
     

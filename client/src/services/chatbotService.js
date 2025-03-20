@@ -1,6 +1,23 @@
 import axios from "axios";
 import { addOrUpdateNode, setParentNode } from "../redux/slices/nodeSlice";
 
+// 🟢 API 요청을 위한 노드 데이터 경량화 함수
+const simplifyNodes = (nodes) => {
+  const simplified = {}; // 직접 객체 생성
+  Object.keys(nodes).forEach((id) => {
+    const node = nodes[id];
+    simplified[id] = {
+      id: node.id,
+      keyword: node.keyword,
+      parent: node.parent,
+      relation: node.relation,
+      children: node.children,
+    };
+  });
+  return simplified;
+};
+
+// 🟢 API 요청을 처리하는 함수
 export const sendMessageToApi = (input, previousMessages) => async (dispatch, getState) => {
   try {
     // 🔹 Step 1: /api/chat 호출하여 GPT 응답 받기
@@ -38,9 +55,10 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
     }
 
     // 🔹 Step 3: /api/update-graph 호출하여 부모 노드 찾기 (새로운 키워드일 때만 실행)
+    const simplifiedNodes = simplifyNodes(getState().node.nodes); // ✅ 노드 데이터 경량화
+
     const parentNode = await axios.post("http://localhost:8080/api/update-graph", {
-      nodes: getState().node.nodes, // ✅ 현재 Redux 상태 전달
-      history: previousMessages,
+      nodes: simplifiedNodes, // ✅ 불필요한 데이터 제거 후 전송
       keyword,
       userMessage: input,
       gptMessage: gptResponse,
