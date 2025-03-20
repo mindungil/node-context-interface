@@ -96,8 +96,17 @@ function Graph() {
         source: node.parent,
         target: node.id,
         label: node.relation || "관련",
-        type: "straight",
+        type: "bezier",  // 🟢 간선을 곡선 형태로 변경
         animated: true,
+        style: {
+          strokeWidth: 2,      // 🟢 간선 두께
+          stroke: "#48BB78",   // 🟢 초록색 기본
+        },
+        labelStyle: { fill: "#333", fontWeight: 600 },  // 🟢 레이블 스타일
+        markerEnd: {
+          type: "arrowclosed", // 🟢 화살표 모양
+          color: "#48BB78",
+        },
       }));
 
     setNodes(updatedNodes);
