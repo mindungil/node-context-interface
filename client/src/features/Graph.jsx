@@ -12,7 +12,13 @@ const GraphContainer = styled.div`
   height: 100%;
 `;
 
-// 🟢 노드 깊이 계산 함수
+// 🟢 부모 노드의 위치를 안전하게 가져오는 함수
+const getParentPosition = (nodes, parentId) => {
+  const parentNode = nodes.find((node) => node.id === parentId);
+  return parentNode ? parentNode.position : { x: 0, y: 0 };
+};
+
+// 🟢 깊이 계산 함수
 const calculateDepth = (nodes, nodeId) => {
   let depth = 0;
   let currentNode = nodes[nodeId];
@@ -23,14 +29,22 @@ const calculateDepth = (nodes, nodeId) => {
   return depth;
 };
 
-// 🟢 Depth별로 노드 개수를 카운팅하여 위치 계산
-const calculatePosition = (depth, index, siblingCount, depthCounts) => {
+// 🟢 대칭 배치 계산 함수
+const calculatePosition = (parentPos, index, siblingCount) => {
   const spacingX = 350;
   const spacingY = 150;
-  const nextDepthHeight = (depthCounts[depth + 1] || 0) * spacingY;
-  const yOffset = Math.max((index - (siblingCount - 1) / 2) * spacingY, nextDepthHeight);
-  const xOffset = depth * spacingX;
-  return { x: xOffset, y: yOffset };
+  const centerY = parentPos.y;
+
+  // 부모 기준 대칭 위치 계산
+  let yOffset = 0;
+  if (siblingCount > 1) {
+    yOffset = ((siblingCount - 1) / 2 - index) * spacingY; // 최신 노드가 상단에 위치하도록 수정
+  }
+
+  // 부모 노드의 Y 좌표 기준으로 정렬
+  const finalY = centerY + yOffset;
+
+  return { x: parentPos.x + spacingX, y: finalY };
 };
 
 function Graph() {
@@ -41,32 +55,38 @@ function Graph() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // 🟢 Depth별 노드 개수 카운트
-  const depthCounts = {};
-
   useEffect(() => {
-    const updatedNodes = Object.values(nodesData).map((node) => {
+    const updatedNodes = [];
+    const depthNodes = {};
+
+    const sortedNodes = Object.values(nodesData).sort((a, b) => b.timestamp - a.timestamp);
+
+    sortedNodes.forEach((node) => {
       const depth = calculateDepth(nodesData, node.id);
+      if (!depthNodes[depth]) depthNodes[depth] = [];
+      depthNodes[depth].push(node);
+    });
 
-      if (!depthCounts[depth]) depthCounts[depth] = 0;
-      const nodeIndex = depthCounts[depth];
-      depthCounts[depth] += 1;
+    Object.keys(depthNodes).forEach((depth) => {
+      const siblingCount = depthNodes[depth].length;
 
-      const position = calculatePosition(depth, nodeIndex, depthCounts[depth], depthCounts);
-
-      return {
-        id: node.id,
-        data: { label: node.keyword },
-        position: position,
-        sourcePosition: "right",
-        targetPosition: "left",
-        style: {
-          background: node.id === "root" ? "#ffcc00" : "#d9d9d9",
-          borderRadius: 20,
-          padding: 10,
-          border: "1px solid #555",
-        },
-      };
+      depthNodes[depth].forEach((node, index) => {
+        const parentPos = getParentPosition(updatedNodes, node.parent);
+        const position = calculatePosition(parentPos, index, siblingCount);
+        updatedNodes.push({
+          id: node.id,
+          data: { label: node.keyword },
+          position: position,
+          sourcePosition: "right",
+          targetPosition: "left",
+          style: {
+            background: node.id === "root" ? "#ffcc00" : "#d9d9d9",
+            borderRadius: 20,
+            padding: 10,
+            border: "1px solid #555",
+          },
+        });
+      });
     });
 
     const updatedEdges = Object.values(nodesData)
