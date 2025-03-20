@@ -10,7 +10,31 @@ const GraphContainer = styled.div`
   justify-content: center;
   width: 100%;
   height: 100%;
+  position: relative; 
 `;
+
+const ButtonGroup = styled.div`
+  position: absolute; 
+  top: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 10; 
+`;
+
+const ModeButton = styled.div`
+  padding: 5px 10px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #eee;
+  }
+`;
+
 
 // 🟢 부모 노드의 위치를 안전하게 가져오는 함수
 const getParentPosition = (nodes, parentId) => {
@@ -133,6 +157,11 @@ function Graph() {
 
   return (
     <GraphContainer ref={containerRef}>
+      <ButtonGroup>
+        <ModeButton variant="outline">Linear</ModeButton>
+        <ModeButton variant="outline">Tree</ModeButton>
+        <ModeButton variant="outline">Node</ModeButton>
+      </ButtonGroup>
       <ReactFlow
         nodes={nodes}
         edges={edges}
