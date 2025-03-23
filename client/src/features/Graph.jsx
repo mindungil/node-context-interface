@@ -4,9 +4,15 @@ import ReactFlow, { useNodesState, useEdgesState, addEdge, Background, Controls,
 import 'reactflow/dist/style.css';
 import { useSelector, useDispatch } from "react-redux";
 import { toggleActiveNode } from "../redux/slices/nodeSlice";
+import ContextButton from "../components/button/ContextButton";
+import CustomTooltipNode from "../components/tooltip-node/TooltipNode";
 
 const edgeTypes = {
   bezier: BezierEdge,
+};
+
+const nodeTypes = {
+  tooltipNode: CustomTooltipNode,
 };
 
 const GraphContainer = styled.div`
@@ -16,28 +22,6 @@ const GraphContainer = styled.div`
   width: 100%;
   height: 100%;
   position: relative; 
-`;
-
-const ButtonGroup = styled.div`
-  position: absolute; 
-  top: 20px;
-  left: 20px;
-  display: flex;
-  gap: 10px;
-  z-index: 10; 
-`;
-
-const ModeButton = styled.div`
-  padding: 5px 10px;
-  background: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  &:hover {
-    background: #eee;
-  }
 `;
 
 const getParentPosition = (nodes, parentId) => {
@@ -105,17 +89,14 @@ function Graph() {
 
         updatedNodes.push({
           id: node.id,
-          data: { label: node.keyword },
+          data: { 
+            label: node.keyword,
+            isActive: activeNodeIds.includes(node.id), // 활성 상태도 데이터로 넘기기
+          },
           position: position,
+          type: "tooltipNode",  // 커스텀 노드 타입
           sourcePosition: "right",
           targetPosition: "left",
-          style: {
-            background: isActive ? "#48BB78" : "#d9d9d9",
-            color: isActive ? "#fff" : "#000",
-            borderRadius: 20,
-            padding: 10,
-            border: isActive ? "2px solid #48BB78" : "1px solid #555",
-          },
         });
       });
     });
@@ -146,17 +127,14 @@ function Graph() {
 
   return (
     <GraphContainer ref={containerRef}>
-      <ButtonGroup>
-        <ModeButton>Linear</ModeButton>
-        <ModeButton>Tree</ModeButton>
-        <ModeButton>Node</ModeButton>
-      </ButtonGroup>
+      <ContextButton />
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick} // ✅ 클릭 핸들러 추가
+        nodeTypes={nodeTypes}
         fitView
       >
         <Background gap={16} size={0.5} color="#aaa" />
