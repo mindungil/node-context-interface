@@ -68,10 +68,25 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
     const { parentNodeId, relation } = parentNode.data;
     console.log(`📌 ${keyword}의 부모 노드: ${parentNodeId}, 관계: ${relation}`);
 
-    // 🔹 Step 4: 부모 노드 정보 기반으로 새로운 노드 추가
+    // 새로운 노드 ID를 만드는 함수
+    const generateNodeId = (parentNodeId, nodes) => {
+      const childIds = nodes[parentNodeId]?.children || [];
+      let maxSuffix = 0;
+
+      // 현재 자식 노드 중 가장 큰 번호를 찾음
+      childIds.forEach(childId => {
+        const suffix = parseInt(childId.split("-").pop(), 10);
+        if (!isNaN(suffix)) {
+          maxSuffix = Math.max(maxSuffix, suffix);
+        }
+      });
+
+      return `${parentNodeId}-${maxSuffix + 1}`;
+    };
+
+    // Step 4: 부모 노드 정보 기반으로 새로운 노드 추가
     const updatedNodes = getState().node.nodes;
-    const childrenCount = updatedNodes[parentNodeId]?.children?.length || 0;
-    const newNodeId = `${parentNodeId}-${childrenCount + 1}`;
+    const newNodeId = generateNodeId(parentNodeId, updatedNodes);
 
     dispatch(
       addOrUpdateNode({
