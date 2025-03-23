@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { useDispatch, useSelector } from "react-redux"; 
+import { useDispatch, useSelector } from "react-redux";
 import { sendMessageToApi } from "../services/chatbotService.js";
 import DialogBox from "../components/textBox/DialogBox.jsx";
+import { addOrUpdateNode } from "../redux/slices/nodeSlice";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -63,6 +64,8 @@ function Chatbot() {
   const messagesEndRef = useRef(null);
   const dispatch = useDispatch();
 
+  const dialogNumber = useSelector((state) => state.node.dialogCount);
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -76,26 +79,37 @@ function Chatbot() {
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    console.log("실행됨");
+    const userMessage = {
+        role: "user",
+        content: input,
+        nodeId: "root",
+        number:  messages.length + 1,  // 🔥 대화 번호 추가
+    };
 
-    const userMessage = { role: "user", content: input, isStep: null };
+    console.log("🔵 사용자 메시지 번호:", userMessage.number);
     let updatedMessages = [...messages, userMessage];
-
     setMessages(updatedMessages);
     setInput("");
 
     try {
-      const gptMessageContent = await dispatch(sendMessageToApi(input, updatedMessages));
+        const gptMessageContent = await dispatch(sendMessageToApi(input, updatedMessages));
+        const gptMessage = {
+            role: "assistant",
+            content: gptMessageContent,
+            nodeId: "root",
+            number: updatedMessages.length + 1,  // 🔥 대화 번호 추가
+        };
 
-      console.log("호출후응답")
-      const gptMessage = { role: "assistant", content: gptMessageContent, isStep: null };
-      updatedMessages = [...updatedMessages, gptMessage];
+        console.log("🟢 GPT 메시지 번호:", gptMessage.number);  // ✅ 콘솔 추가
+        updatedMessages = [...updatedMessages, gptMessage];
+        setMessages(updatedMessages);
 
-      setMessages(updatedMessages);
     } catch (error) {
-      console.error("Error sending message:", error);
+        console.error("Error sending message:", error);
     }
-  };
+};
+
+  
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -107,7 +121,13 @@ function Chatbot() {
     <ChatContainer>
       <MessagesContainer>
         {messages.map((msg, index) => (
-          <DialogBox key={index} text={msg.content} isUser={msg.role === "user"} />
+          <DialogBox
+            key={index}
+            text={msg.content}
+            isUser={msg.role === "user"}
+            nodeId={msg.nodeId}
+            number={msg.number}  // 🔥 넘버링 추가
+          />
         ))}
         <div ref={messagesEndRef} />
       </MessagesContainer>

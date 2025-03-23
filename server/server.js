@@ -14,18 +14,37 @@ const openai = new OpenAI({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 🟢 재시도 함수 - 응답 비어있을 때도 재시도
+async function retryRequest(callback, maxRetries = 5) {
+  let attempts = 0;
+  while (attempts < maxRetries) {
+    try {
+      const response = await callback();
+      const gptResult = response?.choices?.[0]?.message?.content?.trim();
+      
+      // 응답 비어 있는 경우 다시 요청
+      if (!gptResult) {
+        throw new Error("GPT 응답이 비어 있음 - 재시도");
+      }
+
+      return response;
+    } catch (error) {
+      attempts++;
+      console.error(`❌ 재시도 중... (${attempts}/${maxRetries}) - 오류: ${error.message}`);
+      if (attempts >= maxRetries) throw error;
+    }
+  }
+}
+
 app.post('/api/chat', async (req, res) => {  
   const userPrompt = req.body.message;  
   const previousMessages = req.body.history || [];  
 
-  // console.log('User Message:', userPrompt);
-  // console.log('Previous Messages:', previousMessages);
-
   try {
-    const response = await openai.chat.completions.create({
+    const response = await retryRequest(() => openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
-        ...previousMessages,  
+        ...previousMessages,
         { role: 'user', content: userPrompt },
         { 
           role: "system", 
@@ -34,34 +53,41 @@ app.post('/api/chat', async (req, res) => {
       ],
       max_tokens: 800,
       response_format: { type: "json_object" } 
-    });
+    }));
 
     const gptResult = response.choices[0].message.content;
+    
+    // 🔥 응답이 비어 있는 경우 강제 재시도
+    if (!gptResult) {
+      console.error("❗️ GPT 응답이 비어 있음! 재시도...");
+      throw new Error("Empty response from GPT");
+    }
+
     const parsedResult = JSON.parse(gptResult); 
     const gptResponse = parsedResult.response;
     const keyword = parsedResult.keyword; 
-    console.log('GPT Result:', gptResult);
-    console.log('keyword:', keyword);
 
-    res.json({ message: gptResponse, keyword});
+    console.log('✅ GPT Result:', gptResult);
+    console.log('✅ Keyword:', keyword);
+
+    res.json({ message: gptResponse, keyword });
      
   } catch (error) {
-    console.error('Error generating response:', error);
+    console.error('❌ Error generating response:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
 app.post('/api/update-graph', async (req, res) => {  
   const { nodes, keyword, userMessage, gptMessage } = req.body;  
-
   const safeNodes = nodes || {};
   const existingKeywords = Object.values(safeNodes).map(node => node.keyword);
 
-  console.log('📌 그래프 업데이트 요청 받음');
-  console.log('현재 노드 목록:', existingKeywords);
+  console.log('📌 업데이트 요청 받음');
+  console.log('📋 현재 노드 목록:', existingKeywords);
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await retryRequest(() => openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: `
@@ -85,34 +111,28 @@ app.post('/api/update-graph', async (req, res) => {
       max_tokens: 800,
       temperature: 0.2,
       response_format: { type: "json_object" } 
-    });
+    }));
 
-     // ✅ GPT 응답 원본 출력
-     console.log("\n📌 [GPT 응답 원본 - /api/update-graph]:", response.choices[0].message.content);
+    console.log("\n📝 [GPT 응답 원본 - /api/update-graph]:", response.choices[0].message.content);
      
-    // ✅ GPT 응답을 안전하게 가져오기
     let gptResult = response.choices[0]?.message?.content?.trim();
     
     if (!gptResult) {
-      console.error("🚨 GPT 응답이 비어 있음!");
-      return res.status(500).json({ error: "GPT 응답이 비어 있습니다." });
+      console.error("❌ GPT 응답이 비어 있음! 재시도 중...");
+      throw new Error("Empty GPT response");
     }
 
-    console.log("📌 GPT 응답 원본:", gptResult);
-
-    // ✅ JSON 파싱 시 예외 처리
     let parsedResult;
     try {
       parsedResult = JSON.parse(gptResult);
     } catch (parseError) {
-      console.error("🚨 JSON 파싱 오류:", parseError);
-      return res.status(500).json({ error: "GPT 응답을 JSON으로 변환하는 중 오류 발생" });
+      console.error("❌ JSON 파싱 오류:", parseError);
+      throw new Error("GPT 응답을 JSON으로 변환하는 중 오류 발생");
     }
 
     let parentNodeId = parsedResult.parentNodeId?.trim() || "root";
     let relation = parsedResult.relation?.trim() || "관련";
 
-    // ✅ parentNodeId가 기존 노드 목록에 없으면 자동 보정
     if (!Object.keys(safeNodes).includes(parentNodeId)) {
       parentNodeId = Object.keys(safeNodes).find(key => keyword.includes(safeNodes[key].keyword)) || "root";
     }
@@ -122,12 +142,11 @@ app.post('/api/update-graph', async (req, res) => {
     res.json({ parentNodeId, relation });
     
   } catch (error) {
-    console.error("Error in Graph Update:", error);
+    console.error("❌ Error in Graph Update:", error);
     res.status(500).json({ error: "서버 내부 오류 발생" });
   }
 });
 
-
 app.listen(8080, function () {
-  console.log('Server is listening on port 8080');
+  console.log('🚀 Server is listening on port 8080');
 });
