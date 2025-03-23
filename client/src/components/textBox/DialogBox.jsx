@@ -47,11 +47,19 @@ const MessageBubble = styled.div`
     padding: 10px 20px;
     margin: 10px 0px;
     border-radius: ${(props) => (props.isUser ? '30px 30px 0px 30px' : '0px 30px 30px 30px')};
-    background-color: ${(props) => (props.isActive ? '#48BB78' : (props.isUser ? '#f5f5f5' : '#fff'))};
+    background-color: ${(props) => {
+        if (props.isActive) {
+            return props.isScrolled ? '#2C7A7B' : '#48BB78'; // 🔥 이동된 대화 색상과 활성화 색상 구분
+        }
+        return props.isUser ? '#f5f5f5' : '#fff';
+    }};
     color: ${(props) => (props.isActive ? '#fff' : '#000')};
     border: ${(props) => (props.isUser ? 'none' : '1px solid rgba(217, 217, 217, 0.5)')};
     word-wrap: break-word;
     text-align: ${(props) => (props.isUser ? 'right' : 'left')};
+    transition: all 0.3s ease;
+    transform: ${(props) => (props.isActive && props.isScrolled ? 'scale(1.05)' : 'scale(1)')};
+    box-shadow: ${(props) => (props.isActive && props.isScrolled ? '0 4px 8px rgba(0, 0, 0, 0.2)' : 'none')};
 `;
 
 const LabelContainer = styled.div`
@@ -68,16 +76,14 @@ const Label = styled.div`
 
 const DialogBox = ({ text, isUser, nodeId, number }) => {
     const activeDialogNumbers = useSelector((state) => state.node.activeDialogNumbers);
+    const currentScrolledDialog = useSelector((state) => state.node.currentScrolledDialog);
 
-// 🔥 대화 번호가 활성화 목록에 있는지 확인
-const isActive = activeDialogNumbers.includes(number)
-
-console.log("📝 DialogBox - 받은 대화 번호:", number);  // ✅ 콘솔 추가
-console.log("📝 DialogBox - 활성화 여부:", isActive);  // ✅ 콘솔 추가
+    const isActive = activeDialogNumbers.includes(number);
+    const isScrolled = currentScrolledDialog === number;
 
     return (
         <Container isUser={isUser}>
-            <MessageBubble isUser={isUser} isActive={isActive}>
+            <MessageBubble isUser={isUser} isActive={isActive} isScrolled={isScrolled}>
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                     {text}
                 </ReactMarkdown>
@@ -89,6 +95,7 @@ console.log("📝 DialogBox - 활성화 여부:", isActive);  // ✅ 콘솔 추�
         </Container>
     );
 };
+
 
 export default DialogBox;
 

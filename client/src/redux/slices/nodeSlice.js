@@ -18,6 +18,7 @@ const nodeSlice = createSlice({
     activeNodeIds: [],
     activeDialogNumbers: [],
     dialogCount: 1,
+    currentScrolledDialog: null, // 🔥 현재 스크롤된 대화 번호
   },
 
   reducers: {
@@ -105,8 +106,13 @@ const nodeSlice = createSlice({
         state.nodes[parentId].children.push(nodeId);
       }
     },
+
+    // 🔥 현재 스크롤된 대화 번호 설정 액션 추가
+    setCurrentScrolledDialog: (state, action) => {
+      state.currentScrolledDialog = action.payload;
+    },
   },
 });
 
-export const { toggleActiveNode, addOrUpdateNode, setParentNode } = nodeSlice.actions;
+export const { toggleActiveNode, addOrUpdateNode, setParentNode, setCurrentScrolledDialog } = nodeSlice.actions;
 export default nodeSlice.reducer;
