@@ -50,10 +50,32 @@ const getAllParentNodes = (nodeId, nodesData) => {
   return parentNodes.reverse(); // 부모에서 자식 순서로 정렬
 };
 
+// 자식 노드를 모두 가져오는 함수
+const getAllChildNodes = (nodeId, nodesData) => {
+  const childNodes = [];
+  const queue = [nodeId];
+
+  while (queue.length) {
+    const currentId = queue.shift();
+    const currentNode = nodesData[currentId];
+
+    if (!currentNode) continue;
+
+    childNodes.push(currentId);
+
+    // 현재 노드의 자식들을 큐에 추가
+    currentNode.children.forEach((childId) => {
+      queue.push(childId);
+    });
+  }
+
+  return childNodes;
+};
 
 const TooltipNode = ({ data, id }) => {
   const dispatch = useDispatch();
   const linearMode = useSelector((state) => state.mode.linearMode);
+  const treeMode = useSelector((state) => state.mode.treeMode); // ✅ 추가
   const hoveredNodeIds = useSelector((state) => state.mode.hoveredNodeIds);
   const activeNodeIds = useSelector((state) => state.node.activeNodeIds);
   const nodesData = useSelector((state) => state.node.nodes);
@@ -63,34 +85,36 @@ const TooltipNode = ({ data, id }) => {
 
   const handleMouseEnter = () => {
     if (linearMode) {
-      // 현재 노드와 모든 부모 노드들을 가져와 hover 처리
       const parentNodes = getAllParentNodes(id, nodesData);
-      const hoverPath = [...parentNodes, id]; // 부모 + 현재 노드 순서
+      const hoverPath = [...parentNodes, id];
       dispatch(setHoveredNodes(hoverPath));
+    } else if (treeMode) {
+      const childNodes = getAllChildNodes(id, nodesData);
+      dispatch(setHoveredNodes(childNodes));
     }
   };
 
   const handleMouseLeave = () => {
-    if (linearMode) {
+    if (linearMode || treeMode) {
       dispatch(clearHoveredNodes());
     }
   };
 
-  // ✅ 클릭 핸들러 수정
   const handleClick = (event) => {
-    event.stopPropagation(); // 이벤트 버블링 방지
-    console.log("🟢 노드 클릭됨:", id);
-
+    event.stopPropagation();
+  
     if (linearMode && hoveredNodeIds.length > 0) {
-      // 🔥 Hover 상태의 모든 노드를 활성화 또는 비활성화
       hoveredNodeIds.forEach((hoveredId) => {
-        dispatch(toggleActiveNode(hoveredId)); // ✅ 노드 활성화 상태 토글
+        dispatch(toggleActiveNode(hoveredId));
+      });
+    } else if (treeMode && hoveredNodeIds.length > 0) {
+      hoveredNodeIds.forEach((hoveredId) => {
+        dispatch(toggleActiveNode(hoveredId));
       });
     } else {
-      dispatch(toggleActiveNode(id)); // ✅ 단일 노드 활성화 상태 토글
+      dispatch(toggleActiveNode(id));
     }
   };
-
 
   return (
     <TooltipContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={handleClick}>
