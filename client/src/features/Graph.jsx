@@ -61,11 +61,11 @@ function Graph() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // 🟢 노드 클릭 핸들러
-  const handleNodeClick = useCallback((event, node) => {
-    console.log("🔵 노드 클릭됨:", node.id); // ✅ 클릭 확인 로그
-    dispatch(toggleActiveNode(node.id));
-  }, [dispatch]);
+  // // 🟢 노드 클릭 핸들러
+  // const handleNodeClick = useCallback((event, node) => {
+  //   console.log("🔵 노드 클릭됨:", node.id); // ✅ 클릭 확인 로그
+  //   dispatch(toggleActiveNode(node.id));
+  // }, [dispatch]);
 
   useEffect(() => {
     const updatedNodes = [];
@@ -133,7 +133,6 @@ function Graph() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick} // ✅ 클릭 핸들러 추가
         nodeTypes={nodeTypes}
         fitView
       >
