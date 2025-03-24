@@ -76,12 +76,21 @@ const TooltipNode = ({ data, id }) => {
     }
   };
 
-  // ✅ 클릭 핸들러 추가
+  // ✅ 클릭 핸들러 수정
   const handleClick = (event) => {
     event.stopPropagation(); // 이벤트 버블링 방지
     console.log("🟢 노드 클릭됨:", id);
-    dispatch(toggleActiveNode(id)); // ✅ 노드 활성화 상태 토글
+
+    if (linearMode && hoveredNodeIds.length > 0) {
+      // 🔥 Hover 상태의 모든 노드를 활성화 또는 비활성화
+      hoveredNodeIds.forEach((hoveredId) => {
+        dispatch(toggleActiveNode(hoveredId)); // ✅ 노드 활성화 상태 토글
+      });
+    } else {
+      dispatch(toggleActiveNode(id)); // ✅ 단일 노드 활성화 상태 토글
+    }
   };
+
 
   return (
     <TooltipContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={handleClick}>
