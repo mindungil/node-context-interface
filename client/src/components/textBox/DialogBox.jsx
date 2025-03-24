@@ -51,9 +51,13 @@ const MessageBubble = styled.div`
         if (props.isActive) {
             return props.isScrolled ? '#2C7A7B' : '#48BB78'; // 🔥 이동된 대화 색상과 활성화 색상 구분
         }
+        if (props.isContextMode) {
+            return props.isUser ? 'rgba(240, 240, 240, 0.5)' : 'transparent'; // 🔥 Context 모드 비활성화 색상
+        }
         return props.isUser ? '#f5f5f5' : '#fff';
     }};
     color: ${(props) => (props.isActive ? '#fff' : '#000')};
+    opacity: ${(props) => (props.isContextMode && !props.isActive ? 0.6 : 1)}; // 🔥 Context 모드 비활성화 투명도
     border: ${(props) => (props.isUser ? 'none' : '1px solid rgba(217, 217, 217, 0.5)')};
     word-wrap: break-word;
     text-align: ${(props) => (props.isUser ? 'right' : 'left')};
@@ -77,13 +81,14 @@ const Label = styled.div`
 const DialogBox = ({ text, isUser, nodeId, number }) => {
     const activeDialogNumbers = useSelector((state) => state.node.activeDialogNumbers);
     const currentScrolledDialog = useSelector((state) => state.node.currentScrolledDialog);
+    const contextMode = useSelector((state) => state.mode.contextMode); // 🔥 Context 모드 여부
 
     const isActive = activeDialogNumbers.includes(number);
     const isScrolled = currentScrolledDialog === number;
 
     return (
         <Container isUser={isUser}>
-            <MessageBubble isUser={isUser} isActive={isActive} isScrolled={isScrolled}>
+            <MessageBubble isUser={isUser} isActive={isActive} isScrolled={isScrolled} isContextMode={contextMode}>
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                     {text}
                 </ReactMarkdown>

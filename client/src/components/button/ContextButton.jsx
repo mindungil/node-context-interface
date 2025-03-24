@@ -13,15 +13,25 @@ const ButtonGroupContainer = styled.div`
 `;
 
 const ModeButton = styled.div`
-  padding: 5px 10px;
-  background: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 15px 6px 12px;
+  background: ${(props) => (props.active ? "#AA89DB" : "#ffffff")};
+  color: ${(props) => (props.active ? "#fff" : "#000")};
+  border: 1px solid ${(props) => (props.active ? "#AA89DB" : "#D9D9D9")};
+  border-radius: 100px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
+  gap: 7px;
 
   &:hover {
-    background: #eee;
+    background: ${(props) => (props.active ? "#B693EA" : "#eee")};
+  }
+
+  .material-symbols-outlined {
+    color: ${(props) => (props.active ? "#fff" : "#000")}; /* 아이콘 색상도 active에 따라 변경 */
   }
 `;
 
@@ -43,21 +53,29 @@ const ButtonGroup = () => {
     if (linearMode) dispatch(toggleLinearMode());
     if (treeMode) dispatch(toggleTreeMode());
   };
-  
+
   return (
     <ButtonGroupContainer>
-      <ModeButton onClick={handleLinearToggle}>
-        {linearMode ? "Linear (On)" : "Linear (Off)"}
+      <ModeButton onClick={handleLinearToggle} active={linearMode}>
+        <span className="material-symbols-outlined md-black-font md-18">
+          diagonal_line
+        </span>
+        Line
       </ModeButton>
-      <ModeButton onClick={handleTreeToggle}>
-        {treeMode ? "Tree (On)" : "Tree (Off)"}
+      <ModeButton onClick={handleTreeToggle} active={treeMode}>
+        <span className="material-symbols-outlined md-black-font md-18">
+          graph_1
+        </span>
+        Tree
       </ModeButton>
-      <ModeButton onClick={handleNodeToggle}>
-        {nodeMode ? "Node (On)" : "Node (Off)"}
+      <ModeButton onClick={handleNodeToggle} active={nodeMode}>
+        <span className="material-symbols-outlined md-black-font md-18">
+          scatter_plot
+        </span>
+        Node
       </ModeButton>
     </ButtonGroupContainer>
   );
-  
 };
 
 export default ButtonGroup;
