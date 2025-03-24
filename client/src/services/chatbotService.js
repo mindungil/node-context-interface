@@ -20,10 +20,20 @@ const simplifyNodes = (nodes) => {
 // 🟢 API 요청을 처리하는 함수
 export const sendMessageToApi = (input, previousMessages) => async (dispatch, getState) => {
   try {
+    const contextMode = getState().mode.contextMode;
+    const activeDialogNumbers = getState().node.activeDialogNumbers;
+
+    // 🔥 Context Mode 활성화 시 활성 대화만 필터링
+    let filteredMessages = previousMessages;
+    if (contextMode) {
+      filteredMessages = previousMessages.filter((msg, index) => activeDialogNumbers.includes(index + 1));
+      console.log("🔥 Context Mode 활성화 - 활성 대화 필터링:", filteredMessages);
+    }
+
     // 🔹 Step 1: /api/chat 호출하여 GPT 응답 받기
     const response = await axios.post("http://localhost:8080/api/chat", {
       message: input,
-      history: previousMessages,
+      history: filteredMessages,
     });
 
     const { message: gptResponse, keyword } = response.data;
@@ -47,6 +57,7 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
           keyword,
           userMessage: input,
           gptMessage: gptResponse,
+          contextMode,
         })
       );
 
@@ -94,6 +105,7 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
         keyword,
         userMessage: input,
         gptMessage: gptResponse,
+        contextMode,
       })
     );
 

@@ -6,6 +6,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { toggleActiveNode } from "../redux/slices/nodeSlice";
 import ContextButton from "../components/button/ContextButton";
 import CustomTooltipNode from "../components/tooltip-node/TooltipNode";
+import ToggleButton from "../components/button/ToggleButton"; 
+import { toggleContextMode } from "../redux/slices/modeSlice";
 
 const edgeTypes = {
   bezier: BezierEdge,
@@ -22,6 +24,13 @@ const GraphContainer = styled.div`
   width: 100%;
   height: 100%;
   position: relative; 
+`;
+
+const ToggleContainer = styled.div`
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  z-index: 10;
 `;
 
 const getParentPosition = (nodes, parentId) => {
@@ -58,14 +67,16 @@ function Graph() {
   const containerRef = useRef(null);
   const activeNodeIds = useSelector((state) => state.node.activeNodeIds);
   const nodesData = useSelector((state) => state.node.nodes) || {};
+  const contextMode = useSelector((state) => state.mode.contextMode);
+
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // // 🟢 노드 클릭 핸들러
-  // const handleNodeClick = useCallback((event, node) => {
-  //   console.log("🔵 노드 클릭됨:", node.id); // ✅ 클릭 확인 로그
-  //   dispatch(toggleActiveNode(node.id));
-  // }, [dispatch]);
+  // 🔥 토글 상태 변경 핸들러
+  const handleToggle = () => {
+    dispatch(toggleContextMode());
+  };
+  
 
   useEffect(() => {
     const updatedNodes = [];
@@ -127,6 +138,9 @@ function Graph() {
 
   return (
     <GraphContainer ref={containerRef}>
+      <ToggleContainer>
+        <ToggleButton active={contextMode} onToggle={handleToggle} />
+      </ToggleContainer>
       <ContextButton />
       <ReactFlow
         nodes={nodes}

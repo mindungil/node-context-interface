@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { setHoveredNodes, clearHoveredNodes } from "../../redux/slices/modeSlice";
 import { toggleActiveNode } from "../../redux/slices/nodeSlice"; // ✅ 노드 토글 액션 가져오기
 
-
 const TooltipContainer = styled.div`
   position: relative;
   display: inline-block;
@@ -14,18 +13,26 @@ const TooltipContainer = styled.div`
 const NodeContent = styled.div`
   padding: 10px 20px;
   border-radius: 20px;
-  background: ${(props) => (props.isActive ? "#48BB78" : props.isHovered ? "#A0AEC0" : "#d9d9d9")};
-  color: #000;
+  background: ${(props) =>
+    props.isActive
+      ? "#48BB78"
+      : props.isHovered
+      ? "#A0AEC0"
+      : props.isContextMode
+      ? "rgba(217, 217, 217, 0.4)" // Context 모드에서 비활성 노드의 색상
+      : "#d9d9d9"};
+  color: ${(props) => (props.isActive ? "white" : "#000")};
   text-align: center;
   border: 1px solid #555;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s;
+  opacity: ${(props) => (props.isContextMode && !props.isActive ? 0.3 : 1)};
+  cursor: pointer;
 
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
   }
 `;
-
 
 // 부모 노드를 모두 가져오는 함수
 const getAllParentNodes = (nodeId, nodesData) => {
@@ -75,7 +82,8 @@ const getAllChildNodes = (nodeId, nodesData) => {
 const TooltipNode = ({ data, id }) => {
   const dispatch = useDispatch();
   const linearMode = useSelector((state) => state.mode.linearMode);
-  const treeMode = useSelector((state) => state.mode.treeMode); // ✅ 추가
+  const treeMode = useSelector((state) => state.mode.treeMode);
+  const contextMode = useSelector((state) => state.mode.contextMode);
   const hoveredNodeIds = useSelector((state) => state.mode.hoveredNodeIds);
   const activeNodeIds = useSelector((state) => state.node.activeNodeIds);
   const nodesData = useSelector((state) => state.node.nodes);
@@ -102,7 +110,6 @@ const TooltipNode = ({ data, id }) => {
 
   const handleClick = (event) => {
     event.stopPropagation();
-  
     if (linearMode && hoveredNodeIds.length > 0) {
       hoveredNodeIds.forEach((hoveredId) => {
         dispatch(toggleActiveNode(hoveredId));
@@ -118,7 +125,7 @@ const TooltipNode = ({ data, id }) => {
 
   return (
     <TooltipContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={handleClick}>
-      <NodeContent isHovered={isHovered} isActive={isActive}>
+      <NodeContent isHovered={isHovered} isActive={isActive} isContextMode={contextMode}>
         {data.label}
       </NodeContent>
       <Handle type="source" position={Position.Right} />

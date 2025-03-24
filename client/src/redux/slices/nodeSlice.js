@@ -85,7 +85,7 @@ const nodeSlice = createSlice({
     
 
     addOrUpdateNode: (state, action) => {
-      const { id, keyword, userMessage, gptMessage } = action.payload;
+      const { id, keyword, userMessage, gptMessage, contextMode } = action.payload;
 
       if (!state.nodes[id]) {
         const parentNodeId = "root";
@@ -105,6 +105,14 @@ const nodeSlice = createSlice({
         userMessage,
         gptMessage,
       };
+
+      // 🔥 Context Mode가 켜져 있다면 자동으로 활성화 처리
+      if (contextMode) {
+        state.activeNodeIds.push(id);
+        state.activeDialogNumbers.push((dialogNumber - 1) * 2 + 1);  // 질문 번호 추가
+        state.activeDialogNumbers.push((dialogNumber - 1) * 2 + 2);  // 답변 번호 추가
+        console.log("🔥 [Context Mode] 새로 추가된 노드 활성화:", id);
+      }
       
       // 대화 번호 증가
       state.dialogCount += 1;

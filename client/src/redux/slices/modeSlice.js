@@ -5,6 +5,7 @@ const modeSlice = createSlice({
   initialState: {
     linearMode: false,
     treeMode: false,  // 🔥 Tree 모드 상태 추가
+    contextMode: false,
     hoveredNodeIds: [],
   },
 
@@ -19,6 +20,11 @@ const modeSlice = createSlice({
       if (state.treeMode) state.linearMode = false; // Tree 모드 시 Linear 모드 해제
     },
 
+    toggleContextMode: (state) => {  // ✅ Context 모드 토글
+      state.contextMode = !state.contextMode;
+      console.log(`🔥 Context Mode ${state.contextMode ? "ON" : "OFF"}`);
+    },
+
     setHoveredNodes: (state, action) => {
       state.hoveredNodeIds = action.payload;
     },
@@ -29,5 +35,5 @@ const modeSlice = createSlice({
   },
 });
 
-export const { toggleLinearMode, toggleTreeMode, setHoveredNodes, clearHoveredNodes } = modeSlice.actions;
+export const { toggleLinearMode, toggleTreeMode, toggleContextMode, setHoveredNodes, clearHoveredNodes } = modeSlice.actions;
 export default modeSlice.reducer;
