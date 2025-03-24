@@ -29,13 +29,19 @@ const ButtonGroup = () => {
   const dispatch = useDispatch();
   const linearMode = useSelector((state) => state.mode.linearMode);
   const treeMode = useSelector((state) => state.mode.treeMode);
-  
+  const nodeMode = !linearMode && !treeMode;
+
   const handleLinearToggle = () => {
     dispatch(toggleLinearMode());
   };
 
   const handleTreeToggle = () => {
     dispatch(toggleTreeMode());
+  };
+
+  const handleNodeToggle = () => {
+    if (linearMode) dispatch(toggleLinearMode());
+    if (treeMode) dispatch(toggleTreeMode());
   };
   
   return (
@@ -46,7 +52,9 @@ const ButtonGroup = () => {
       <ModeButton onClick={handleTreeToggle}>
         {treeMode ? "Tree (On)" : "Tree (Off)"}
       </ModeButton>
-      <ModeButton>Node</ModeButton>
+      <ModeButton onClick={handleNodeToggle}>
+        {nodeMode ? "Node (On)" : "Node (Off)"}
+      </ModeButton>
     </ButtonGroupContainer>
   );
   
