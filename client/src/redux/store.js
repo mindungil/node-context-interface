@@ -1,8 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
-import keywordReducer from "./slices/keywordSlice";
+import nodeReducer from "./slices/nodeSlice";
+import modeReducer from "./slices/modeSlice";
 
 export const store = configureStore({
   reducer: {
-    keyword: keywordReducer,
+    node: nodeReducer,
+    mode: modeReducer,
   },
 });
