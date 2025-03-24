@@ -62,7 +62,19 @@ const nodeSlice = createSlice({
     
           // 중복 제거하여 활성화 목록 갱신
           const uniqueDialogs = Array.from(new Set([...state.activeDialogNumbers, ...activeDialogs]));
+
+          // 🔥 오름차순 정렬
+          uniqueDialogs.sort((a, b) => a - b);
           state.activeDialogNumbers = uniqueDialogs;
+
+          // 🔥 가장 최근 대화로 스크롤되도록 설정
+          const latestDialogNumber = uniqueDialogs[uniqueDialogs.length - 1];
+          state.currentScrolledDialog = latestDialogNumber;
+
+          console.log("✅ [Redux] 활성화됨:", nodeId);
+          console.log("🔥 [Redux] 활성화된 노드 목록:", JSON.stringify(state.activeNodeIds));
+          console.log("🔥 [Redux] 활성화된 대화 번호 목록:", JSON.stringify(state.activeDialogNumbers));
+          console.log("🔥 [Redux] 현재 스크롤된 대화 번호:", state.currentScrolledDialog);
         }
     
         console.log("✅ 활성화됨:", nodeId);

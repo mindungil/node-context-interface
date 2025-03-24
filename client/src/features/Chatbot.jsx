@@ -105,14 +105,27 @@ function Chatbot() {
     }
   };
 
-  // 🔥 활성화된 대화 번호가 변경될 때 첫 번째로 스크롤
-  useEffect(() => {
-    if (activeDialogNumbers.length > 0) {
-      const lastIndex = activeDialogNumbers.length - 1;
-      setCurrentIndex(lastIndex);
-      scrollToMessage(activeDialogNumbers[lastIndex] - 1);
-    }
-  }, [activeDialogNumbers]);
+// 🔥 활성화된 대화 번호가 변경될 때 최신 대화로 스크롤
+useEffect(() => {
+  if (activeDialogNumbers.length > 0) {
+    // 🔥 항상 오름차순으로 정렬하여 최신 대화 번호를 가져옴
+    const sortedDialogs = [...activeDialogNumbers].sort((a, b) => a - b);
+    const latestDialogNumber = sortedDialogs[sortedDialogs.length - 1];  // 🔥 최신 대화 번호를 배열 마지막으로 가져옴
+    const latestIndex = sortedDialogs.length - 1;  // 🔥 최신 대화 인덱스는 배열의 마지막 인덱스
+    setCurrentIndex(latestIndex);
+
+    console.log("🚀 [Auto Scroll] 활성화된 대화 번호 목록:", sortedDialogs);
+    console.log("🔥 [Auto Scroll] 최신 대화 번호:", latestDialogNumber);
+    console.log("🔥 [Auto Scroll] 최신 대화 인덱스:", latestIndex);
+
+    // 🔥 상태가 업데이트된 후에 스크롤 처리 (비동기 처리로 DOM 업데이트 보장)
+    setTimeout(() => {
+      console.log("🔥 [Auto Scroll] 스크롤 이동 시도:", latestDialogNumber - 1);
+      scrollToMessage(latestDialogNumber - 1);
+    }, 0);
+  }
+}, [activeDialogNumbers]);
+
 
   // 🔥 새로운 대화가 추가될 때 아래로 스크롤
   useEffect(() => {
@@ -121,21 +134,23 @@ function Chatbot() {
 
   // 🔥 화살표 클릭 시 대화 이동
   const moveToMessage = (direction) => {
-    const allActiveDialogNumbers = messages
-      .filter((msg) => activeDialogNumbers.includes(msg.number))
-      .map((msg) => msg.number);
-  
-    const currentDialogIndex = allActiveDialogNumbers.indexOf(activeDialogNumbers[currentIndex]);
+    const sortedDialogs = [...activeDialogNumbers].sort((a, b) => a - b);
+    const currentDialogIndex = sortedDialogs.indexOf(activeDialogNumbers[currentIndex]);
     const nextIndex = currentDialogIndex + direction;
+ 
+    console.log("🚀 [Arrow Move] 현재 활성 대화 인덱스:", currentDialogIndex);
+    console.log("🚀 [Arrow Move] 다음 인덱스:", nextIndex);
+    console.log("🚀 [Arrow Move] 방향:", direction);
+    console.log("🚀 [Arrow Move] 활성화된 대화 번호 목록:", sortedDialogs);
 
-    if (nextIndex >= 0 && nextIndex < allActiveDialogNumbers.length) {
-        const nextMessageNumber = allActiveDialogNumbers[nextIndex];
-        setCurrentIndex(nextIndex);
-        dispatch(setCurrentScrolledDialog(nextMessageNumber)); // 🔥 현재 이동한 대화 번호 설정
-        scrollToMessage(nextMessageNumber - 1);
+    if (nextIndex >= 0 && nextIndex < sortedDialogs.length) {
+      const nextMessageNumber = sortedDialogs[nextIndex];
+      setCurrentIndex(nextIndex);
+      dispatch(setCurrentScrolledDialog(nextMessageNumber)); // 🔥 현재 이동한 대화 번호 설정
+      scrollToMessage(nextMessageNumber - 1);
     }
   };
-
+  
 
   const handleSend = async () => {
     if (input.trim() === "") return;
