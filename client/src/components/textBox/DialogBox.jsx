@@ -15,17 +15,17 @@ const Container = styled.div`
     position: relative;
 `;
 
-const LineContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    right: -15px;
-    top: 0;
-    bottom: 0;
-    height: 100%;
-    justify-content: flex-start;
-    align-items: center;
-`;
+// const LineContainer = styled.div`
+//     display: flex;
+//     flex-direction: column;
+//     position: absolute;
+//     right: -15px;
+//     top: 0;
+//     bottom: 0;
+//     height: 100%;
+//     justify-content: flex-start;
+//     align-items: center;
+// `;
 
 const Circle = styled.div`
     width: 12px;
@@ -44,7 +44,7 @@ const Line = styled.div`
 const MessageBubble = styled.div`
     display: flex;
     flex-direction: column;
-    padding: 10px 20px;
+    padding: 5px 20px;
     margin: 10px 0px;
     border-radius: ${(props) => (props.isUser ? '30px 30px 0px 30px' : '0px 30px 30px 30px')};
     background-color: ${(props) => {
@@ -93,10 +93,10 @@ const DialogBox = ({ text, isUser, nodeId, number }) => {
                     {text}
                 </ReactMarkdown>
             </MessageBubble>
-            <LineContainer>
+            {/* <LineContainer>
                 {isUser && <Circle />}
                 <Line />
-            </LineContainer>
+            </LineContainer> */}
         </Container>
     );
 };

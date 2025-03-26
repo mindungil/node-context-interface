@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { setHoveredNodes, clearHoveredNodes } from "../../redux/slices/modeSlice";
 import { toggleActiveNode } from "../../redux/slices/nodeSlice"; // ✅ 노드 토글 액션 가져오기
+import { COLORS } from "../../styles/colors";
 
 const TooltipContainer = styled.div`
   position: relative;
@@ -20,13 +21,15 @@ const NodeContent = styled.div`
       ? "#A0AEC0"
       : props.isContextMode
       ? "rgba(217, 217, 217, 0.4)" // Context 모드에서 비활성 노드의 색상
-      : "#d9d9d9"};
-  color: ${(props) => (props.isActive ? "white" : "#000")};
+      : "#fff"};
+  color: ${(props) => (props.isActive ? "white" : COLORS.black_font)};
   text-align: center;
-  border: 1px solid #555;
+  border: 1px solid #d9d9d9;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s;
   opacity: ${(props) => (props.isContextMode && !props.isActive ? 0.3 : 1)};
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
 
   &:hover {
     transform: scale(1.05);
@@ -128,8 +131,16 @@ const TooltipNode = ({ data, id }) => {
       <NodeContent isHovered={isHovered} isActive={isActive} isContextMode={contextMode}>
         {data.label}
       </NodeContent>
-      <Handle type="source" position={Position.Right} />
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ background: "#d9d9d9"}}
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: "#d9d9d9"}}
+      />
     </TooltipContainer>
   );
 };
