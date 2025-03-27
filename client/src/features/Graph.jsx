@@ -24,7 +24,7 @@ const colorPalette = [
 ];
 
 // 민트 노랑 초록 하늘 보라
-// 빨강 주황 파랑 코랄 ???
+// 빨강 주황 파랑 코랄 
 
 const GraphContainer = styled.div`
   display: flex;
@@ -135,8 +135,15 @@ function Graph() {
     });
 
     const updatedEdges = Object.values(nodesData)
-      .filter((node) => node.parent !== null && nodesData[node.parent])
-      .map((node) => ({
+    .filter((node) => node.parent !== null && nodesData[node.parent])
+    .map((node) => {
+      const isActive = activeNodeIds.includes(node.id);       // 현재 노드 활성 여부
+      const parentIsActive = activeNodeIds.includes(node.parent);  // 부모 노드 활성 여부
+  
+      // ✅ Context 모드가 켜져 있고, 현재 노드 또는 부모 노드가 비활성화일 때 투명도 0.2
+      const edgeOpacity = contextMode && !(isActive || parentIsActive) ? 0.2 : 1;
+  
+      return {
         id: `${node.parent}-${node.id}`,
         source: node.parent,
         target: node.id,
@@ -146,20 +153,28 @@ function Graph() {
         style: {
           strokeWidth: 2,
           stroke: rootColorMap[node.id] || "#333",
+          opacity: edgeOpacity,  // ✅ 투명도 설정
+          transition: "opacity 0.2s ease",  // ✅ 부드러운 전환 효과
+        },
+        data: {  // 🔥 data 속성 안에 전달
+          isActive: isActive,
+          contextMode: contextMode,
         },
         labelStyle: {
           fontWeight: 600,
           fontSize: 14,
+          opacity: edgeOpacity,  // ✅ 레이블 투명도도 동일하게 설정
         },
         markerEnd: {
           type: "arrowclosed",
           color: rootColorMap[node.id] || "#333",
         },
-      }));
+      };
+    });  
 
     setNodes(updatedNodes);
     setEdges(updatedEdges);
-  }, [nodesData, activeNodeIds]);
+  }, [nodesData, activeNodeIds, contextMode]);
 
   return (
     <GraphContainer ref={containerRef}>

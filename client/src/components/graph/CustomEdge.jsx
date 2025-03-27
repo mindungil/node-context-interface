@@ -36,7 +36,12 @@ const CustomEdge = ({
   style = {},
   label,
   markerEnd,
+  data,
 }) => {
+
+  const isActive = data?.isActive || false;
+  const contextMode = data?.contextMode || false;
+
   // 베지어 경로와 중앙점 계산
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -47,14 +52,21 @@ const CustomEdge = ({
     targetPosition,
   });
 
+const edgeStyle = {
+  ...style,
+  opacity: contextMode && !isActive ? 0.2 : 1,  // 🔥 Context 모드일 때 비활성화 간선 투명도
+  transition: "opacity 0.2s ease",  // 투명도 전환 애니메이션
+};
+
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={edgeStyle} />
       <EdgeLabelRenderer>
         <EdgeLabelContainer
           style={{
             left: `${labelX}px`,
             top: `${labelY}px`,
+            opacity: style.opacity,  // ✅ Graph에서 설정한 투명도 사용
           }}
         >
           {label}

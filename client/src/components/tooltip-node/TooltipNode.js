@@ -82,6 +82,7 @@ const getAllChildNodes = (nodeId, nodesData) => {
   return childNodes;
 };
 
+
 const TooltipNode = ({ data, id }) => {
   const dispatch = useDispatch();
   const linearMode = useSelector((state) => state.mode.linearMode);
