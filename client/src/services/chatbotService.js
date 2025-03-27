@@ -22,6 +22,8 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
   try {
     const contextMode = getState().mode.contextMode;
     const activeDialogNumbers = getState().node.activeDialogNumbers;
+    const allNodes = getState().node.nodes;
+    const activeNodeIds = getState().node.activeNodeIds;
 
     // 🔥 Context Mode 활성화 시 활성 대화만 필터링
     let filteredMessages = previousMessages;
@@ -29,6 +31,13 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
       filteredMessages = previousMessages.filter((msg, index) => activeDialogNumbers.includes(index + 1));
       console.log("🔥 Context Mode 활성화 - 활성 대화 필터링:", filteredMessages);
     }
+
+    // 🔥 Context Mode 활성화 시 활성 노드만 필터링
+    const filteredNodes = contextMode
+      ? Object.fromEntries(Object.entries(allNodes).filter(([id]) => activeNodeIds.includes(id)))
+      : allNodes;
+
+    console.log("🔥 Context Mode 활성화 - 활성 노드 필터링:", filteredNodes);
 
     // 🔹 Step 1: /api/chat 호출하여 GPT 응답 받기
     const response = await axios.post("http://localhost:8080/api/chat", {
@@ -38,13 +47,13 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
 
     const { message: gptResponse, keyword } = response.data;
 
-    if (!keyword) return gptResponse; // ✅ 키워드 없으면 그냥 메시지만 반환
+    if (!keyword) return gptResponse;
 
     console.log("📌 GPT 응답:", { keyword, gptResponse });
 
     // 🔹 Step 2: 동일한 키워드가 이미 있는지 체크
-    const existingNodeId = Object.keys(getState().node.nodes).find(
-      (nodeId) => getState().node.nodes[nodeId].keyword === keyword
+    const existingNodeId = Object.keys(filteredNodes).find(
+      (nodeId) => filteredNodes[nodeId].keyword === keyword
     );
 
     if (existingNodeId) {
@@ -65,27 +74,13 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
       return gptResponse;
     }
 
-    // 🔹 Step 3: /api/update-graph 호출하여 부모 노드 찾기 (새로운 키워드일 때만 실행)
-    const simplifiedNodes = simplifyNodes(getState().node.nodes); // ✅ 노드 데이터 경량화
-
-    const parentNode = await axios.post("http://localhost:8080/api/update-graph", {
-      nodes: simplifiedNodes, // ✅ 불필요한 데이터 제거 후 전송
-      keyword,
-      userMessage: input,
-      gptMessage: gptResponse,
-    });
-
-    // ✅ parentNodeId, relation JSON 객체로 가져오기
-    const { parentNodeId, relation } = parentNode.data;
-    console.log(`📌 ${keyword}의 부모 노드: ${parentNodeId}, 관계: ${relation}`);
-
-    // 새로운 노드 ID를 만드는 함수
+    // 🔥 새로운 노드 ID를 만드는 함수
     const generateNodeId = (parentNodeId, nodes) => {
       const childIds = nodes[parentNodeId]?.children || [];
       let maxSuffix = 0;
 
       // 현재 자식 노드 중 가장 큰 번호를 찾음
-      childIds.forEach(childId => {
+      childIds.forEach((childId) => {
         const suffix = parseInt(childId.split("-").pop(), 10);
         if (!isNaN(suffix)) {
           maxSuffix = Math.max(maxSuffix, suffix);
@@ -95,7 +90,19 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
       return `${parentNodeId}-${maxSuffix + 1}`;
     };
 
-    // Step 4: 부모 노드 정보 기반으로 새로운 노드 추가
+    // 🔹 Step 3: /api/update-graph 호출하여 부모 노드 찾기 (새로운 키워드일 때만 실행)
+    const simplifiedNodes = simplifyNodes(filteredNodes);
+
+    const parentNode = await axios.post("http://localhost:8080/api/update-graph", {
+      nodes: simplifiedNodes,
+      keyword,
+      userMessage: input,
+      gptMessage: gptResponse,
+    });
+
+    const { parentNodeId, relation } = parentNode.data;
+    console.log(`📌 ${keyword}의 부모 노드: ${parentNodeId}, 관계: ${relation}`);
+
     const updatedNodes = getState().node.nodes;
     const newNodeId = generateNodeId(parentNodeId, updatedNodes);
 
@@ -109,7 +116,6 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
       })
     );
 
-    // 🔹 Step 5: 부모 노드와 연결
     if (parentNodeId && updatedNodes[parentNodeId]) {
       dispatch(setParentNode({ nodeId: newNodeId, parentId: parentNodeId, relation }));
       console.log(`✅ ${newNodeId}이(가) ${parentNodeId}에 "${relation}" 관계로 연결됨.`);
