@@ -86,13 +86,16 @@ app.post('/api/update-graph', async (req, res) => {
   console.log('📌 업데이트 요청 받음');
   console.log('📋 현재 노드 목록:', existingKeywords);
 
+ // 🔥 노드 데이터 전체 출력
+ console.log('🗺️ 전달된 노드 데이터:', JSON.stringify(safeNodes, null, 2));
+
   try {
     const response = await retryRequest(() => openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: `
           1. 사용자의 대화 맥락을 고려하여 새로운 키워드(${keyword})가 어디에 연결되어야 하는지 판단해줘.
-          2. 기존 노드 중 가장 연관성이 높은 노드를 부모 노드로 선택해야 해.
+          2. 기존 노드 중 대화 맥락 상 가장 연관성이 높은 노드를 부모 노드로 선택해야 해.
           3. 부모-자식 간의 관계(온톨로지)를 설정해줘. 하지만 관계는 한 단어 또는 짧은 구로만 표현해야 해.
         `},
         { role: 'user', content: `현재 그래프 상태: ${JSON.stringify(safeNodes)}` },
