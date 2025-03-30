@@ -11,7 +11,7 @@ const ToggleSwitch = styled.div`
   width: 50px;
   height: 25px;
   border-radius: 50px;
-  background-color: ${(props) => (props.active ? "#48BB78" : "#ccc")};
+  background-color: ${(props) => (props.active ? "#AA89DB" : "#ccc")};
   position: relative;
   cursor: pointer;
   transition: background-color 0.3s ease;

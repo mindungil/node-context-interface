@@ -37,7 +37,7 @@ const GraphContainer = styled.div`
   height: 90%;
   border-radius: 20px;
   border: 1px solid rgba(217, 217, 217, 0.5);
-  background-color: rgba(226, 226, 226, 0.2);
+  background-color: rgba(226, 226, 226, 0.1);
 `;
 
 function Main() {

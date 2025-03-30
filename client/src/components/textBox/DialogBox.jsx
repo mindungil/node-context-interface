@@ -15,17 +15,17 @@ const Container = styled.div`
     position: relative;
 `;
 
-const LineContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    right: -15px;
-    top: 0;
-    bottom: 0;
-    height: 100%;
-    justify-content: flex-start;
-    align-items: center;
-`;
+// const LineContainer = styled.div`
+//     display: flex;
+//     flex-direction: column;
+//     position: absolute;
+//     right: -15px;
+//     top: 0;
+//     bottom: 0;
+//     height: 100%;
+//     justify-content: flex-start;
+//     align-items: center;
+// `;
 
 const Circle = styled.div`
     width: 12px;
@@ -44,16 +44,20 @@ const Line = styled.div`
 const MessageBubble = styled.div`
     display: flex;
     flex-direction: column;
-    padding: 10px 20px;
+    padding: 5px 20px;
     margin: 10px 0px;
     border-radius: ${(props) => (props.isUser ? '30px 30px 0px 30px' : '0px 30px 30px 30px')};
     background-color: ${(props) => {
         if (props.isActive) {
             return props.isScrolled ? '#2C7A7B' : '#48BB78'; // 🔥 이동된 대화 색상과 활성화 색상 구분
         }
+        if (props.isContextMode) {
+            return props.isUser ? 'rgba(240, 240, 240, 0.5)' : 'transparent'; // 🔥 Context 모드 비활성화 색상
+        }
         return props.isUser ? '#f5f5f5' : '#fff';
     }};
     color: ${(props) => (props.isActive ? '#fff' : '#000')};
+    opacity: ${(props) => (props.isContextMode && !props.isActive ? 0.6 : 1)}; // 🔥 Context 모드 비활성화 투명도
     border: ${(props) => (props.isUser ? 'none' : '1px solid rgba(217, 217, 217, 0.5)')};
     word-wrap: break-word;
     text-align: ${(props) => (props.isUser ? 'right' : 'left')};
@@ -77,21 +81,22 @@ const Label = styled.div`
 const DialogBox = ({ text, isUser, nodeId, number }) => {
     const activeDialogNumbers = useSelector((state) => state.node.activeDialogNumbers);
     const currentScrolledDialog = useSelector((state) => state.node.currentScrolledDialog);
+    const contextMode = useSelector((state) => state.mode.contextMode); // 🔥 Context 모드 여부
 
     const isActive = activeDialogNumbers.includes(number);
     const isScrolled = currentScrolledDialog === number;
 
     return (
         <Container isUser={isUser}>
-            <MessageBubble isUser={isUser} isActive={isActive} isScrolled={isScrolled}>
+            <MessageBubble isUser={isUser} isActive={isActive} isScrolled={isScrolled} isContextMode={contextMode}>
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                     {text}
                 </ReactMarkdown>
             </MessageBubble>
-            <LineContainer>
+            {/* <LineContainer>
                 {isUser && <Circle />}
                 <Line />
-            </LineContainer>
+            </LineContainer> */}
         </Container>
     );
 };
