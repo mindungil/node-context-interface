@@ -18,16 +18,18 @@ const ModeButton = styled.div`
   align-items: center;
   justify-content: center;
   padding: 6px 15px 6px 12px;
-  background: ${(props) => (props.active ? "#AA89DB" : "#ffffff")};
+  background: ${(props) => (props.active ? "#373D47" : "#ffffff")};
   color: ${(props) => (props.active ? "#fff" : "#000")};
-  border: 1px solid ${(props) => (props.active ? "#AA89DB" : "#D9D9D9")};
+  border: 1px solid ${(props) => (props.active ? "#373D47" : "#D9D9D9")};
   border-radius: 100px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   gap: 7px;
 
   &:hover {
-    background: ${(props) => (props.active ? "#B693EA" : "#eee")};
+    background: ${(props) => (props.active ? "#4A515E" : "#eee")};
+    border: 1px solid ${(props) => (props.active ? "#4A515E" : "#D9D9D9")};
+    transition: background 0.2s, color 0.2s;
   }
 
   .material-symbols-outlined {

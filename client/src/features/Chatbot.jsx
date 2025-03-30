@@ -151,6 +151,8 @@ useEffect(() => {
     }
   };
   
+  const activeNodeIds = useSelector((state) => state.node.activeNodeIds);
+  const currentNodeId = activeNodeIds[activeNodeIds.length - 1] || "root";
 
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -158,7 +160,7 @@ useEffect(() => {
     const userMessage = {
       role: "user",
       content: input,
-      nodeId: "root",
+      nodeId: currentNodeId,
       number: messages.length + 1,
     };
 
@@ -171,7 +173,7 @@ useEffect(() => {
       const gptMessage = {
         role: "assistant",
         content: gptMessageContent,
-        nodeId: "root",
+        nodeId: currentNodeId,
         number: updatedMessages.length + 1,
       };
       updatedMessages = [...updatedMessages, gptMessage];

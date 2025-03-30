@@ -1,4 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAction } from "@reduxjs/toolkit";
+
+// ✅ [변경 2] nodeColors 세팅용 액션 생성
+export const setNodeColors = createAction("node/setNodeColors");
 
 const nodeSlice = createSlice({
   name: "node",
@@ -19,6 +22,7 @@ const nodeSlice = createSlice({
     activeDialogNumbers: [],
     dialogCount: 1,
     currentScrolledDialog: null, // 🔥 현재 스크롤된 대화 번호
+    nodeColors: {},
   },
 
   reducers: {
@@ -81,8 +85,7 @@ const nodeSlice = createSlice({
         console.log("🔥 활성화된 노드 목록:", JSON.stringify(state.activeNodeIds));
         console.log("🔥 활성화된 대화 번호 목록:", JSON.stringify(state.activeDialogNumbers));
       });
-    },    
-    
+    },
 
     addOrUpdateNode: (state, action) => {
       const { id, keyword, userMessage, gptMessage, contextMode } = action.payload;
@@ -133,6 +136,12 @@ const nodeSlice = createSlice({
     setCurrentScrolledDialog: (state, action) => {
       state.currentScrolledDialog = action.payload;
     },
+  },
+
+  extraReducers: (builder) => {
+    builder.addCase(setNodeColors, (state, action) => {
+      state.nodeColors = action.payload;
+    });
   },
 });
 

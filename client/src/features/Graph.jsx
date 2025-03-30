@@ -8,6 +8,7 @@ import CustomEdge from "../components/graph/CustomEdge";
 import CustomTooltipNode from "../components/tooltip-node/TooltipNode";
 import ToggleButton from "../components/button/ToggleButton";
 import { toggleContextMode } from "../redux/slices/modeSlice";
+import { setNodeColors } from "../redux/slices/nodeSlice";
 
 const edgeTypes = {
   custom: CustomEdge,
@@ -206,6 +207,8 @@ function Graph() {
 
     setNodes(updatedNodes);
     setEdges(updatedEdges);
+
+    dispatch(setNodeColors(rootColorMap));
   }, [nodesData, activeNodeIds, contextMode]);
 
   return (
