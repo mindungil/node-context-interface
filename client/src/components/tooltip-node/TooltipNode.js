@@ -11,20 +11,26 @@ const TooltipContainer = styled.div`
   display: inline-block;
 `;
 
+// 676B71
+
 const NodeContent = styled.div`
   padding: 10px 20px;
   border-radius: 20px;
   background: ${(props) =>
     props.isActive
-      ? "#48BB78"
+      ? "#606368"
       : props.isHovered
       ? "#A0AEC0"
       : props.isContextMode
       ? "rgba(217, 217, 217, 0.4)" // Context 모드에서 비활성 노드의 색상
       : "#fff"};
-  color: ${(props) => (props.isActive ? "white" : COLORS.black_font)};
+  color: ${(props) => (props.isActive ? "white" : COLORS.dark_grey_font)};
   text-align: center;
-  border: 1px solid #d9d9d9;
+  border: 1px solid
+    ${(props) =>
+      props.isActive
+        ? props.borderColor || "#48BB78" // ✅ 활성화 시엔 color 사용
+        : "#d9d9d9"};
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s;
   opacity: ${(props) => (props.isContextMode && !props.isActive ? 0.3 : 1)};
   cursor: pointer;
@@ -129,18 +135,18 @@ const TooltipNode = ({ data, id }) => {
 
   return (
     <TooltipContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={handleClick}>
-      <NodeContent isHovered={isHovered} isActive={isActive} isContextMode={contextMode}>
+      <NodeContent isHovered={isHovered} isActive={isActive} isContextMode={contextMode} borderColor={data.color}>
         {data.label}
       </NodeContent>
       <Handle
         type="source"
         position={Position.Right}
-        style={{ background: "#d9d9d9"}}
+        style={{ background: data.color}}
       />
       <Handle
         type="target"
         position={Position.Left}
-        style={{ background: "#d9d9d9"}}
+        style={{ background: data.color}}
       />
     </TooltipContainer>
   );
