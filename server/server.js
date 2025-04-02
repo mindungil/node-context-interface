@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path'); 
 const OpenAI = require('openai');
 const cors = require('cors'); 
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
@@ -13,6 +14,11 @@ const openai = new OpenAI({
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 🚀 mongodb 연결
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB 연결 성공'))
+  .catch(err => console.error('❌ Mongodb 연결 실패', err))
 
 // 🟢 재시도 함수 - 응답 비어있을 때도 재시도
 async function retryRequest(callback, maxRetries = 5) {
