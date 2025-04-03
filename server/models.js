@@ -3,13 +3,12 @@ const autoIncrement = require('mongoose-sequence')(mongoose);
 
 // node 내 로그데이터 스키마 구성
 const nodeSchema = new mongoose.Schema({
-    textCount: { type: Number, default: 0 },    
-    inputToken: { type: Number, default: 0 },
-    outputToken: { type: Number, default: 0 }
+    texts: { type: Number, default: 0 },    
+    prompt_tokens: { type: Number, default: 0 },
+    completion_tokens: { type: Number, default: 0 }
 });
 
 export const Node = mongoose.model('Node', nodeSchema);
-
 
 // 피실험자 로그데이터 스키마 구성
 const userSchema = new mongoose.Schema({

@@ -21,6 +21,9 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB 연결 성공'))
   .catch(err => console.error('❌ Mongodb 연결 실패', err))
 
+// 🔥 로그데이터 확인을 위한 User 생성
+const user = new User()
+
 // 🟢 재시도 함수 - 응답 비어있을 때도 재시도
 async function retryRequest(callback, maxRetries = 5) {
   let attempts = 0;
@@ -45,7 +48,7 @@ async function retryRequest(callback, maxRetries = 5) {
 
 app.post('/api/chat', async (req, res) => {  
   const userPrompt = req.body.message;  
-  const previousMessages = req.body.history || [];  
+  const previousMessages = req.body.history || [];
 
   try {
     const response = await retryRequest(() => openai.chat.completions.create({
@@ -73,6 +76,16 @@ app.post('/api/chat', async (req, res) => {
       console.error("❗️ GPT 응답이 비어 있음! 재시도...");
       throw new Error("Empty response from GPT");
     }
+
+    // 개별 node의 로그데이터 추출
+    const { prompt_tokens, completion_tokens } = response.usage;
+    const texts = userPrompt.length;
+
+    user.nodes.push({
+      texts: texts,
+      prompt_tokens: prompt_tokens,
+      completion_tokens: completion_tokens,
+    })
 
     const parsedResult = JSON.parse(gptResult); 
     const gptResponse = parsedResult.response;
@@ -135,7 +148,7 @@ app.post('/api/update-graph', async (req, res) => {
       console.error("❌ GPT 응답이 비어 있음! 재시도 중...");
       throw new Error("Empty GPT response");
     }
-
+  
     let parsedResult;
     try {
       parsedResult = JSON.parse(gptResult);
