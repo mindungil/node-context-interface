@@ -4,6 +4,7 @@ const path = require('path');
 const OpenAI = require('openai');
 const cors = require('cors'); 
 const mongoose = require('mongoose');
+const User = require('./models');
 
 const app = express();
 app.use(cors());
