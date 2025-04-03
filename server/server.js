@@ -4,7 +4,7 @@ const path = require('path');
 const OpenAI = require('openai');
 const cors = require('cors'); 
 const mongoose = require('mongoose');
-const User = require('./models');
+const { User } = require('./models');
 
 const app = express();
 app.use(cors());
@@ -86,6 +86,7 @@ app.post('/api/chat', async (req, res) => {
       prompt_tokens: prompt_tokens,
       completion_tokens: completion_tokens,
     })
+    await user.save();
 
     const parsedResult = JSON.parse(gptResult); 
     const gptResponse = parsedResult.response;
