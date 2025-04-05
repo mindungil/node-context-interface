@@ -107,6 +107,7 @@ function Chatbot() {
 
   const dialogNumber = useSelector((state) => state.node.dialogCount);
   const activeDialogNumbers = useSelector((state) => state.node.activeDialogNumbers);  // 🔥 활성화된 대화 번호들
+  const contextMode = useSelector((state) => state.mode.contextMode);
 
   // 🔥 대화 스크롤 이동 함수
   const scrollToMessage = (index) => {
@@ -229,7 +230,7 @@ useEffect(() => {
       handleSend();
     }
   };
-
+  
   return (
     <ChatContainer>
       <MessagesContainer>
