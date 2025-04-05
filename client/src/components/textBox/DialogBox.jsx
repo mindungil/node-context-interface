@@ -5,7 +5,8 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css'; 
 import { COLORS } from "../../styles/colors.jsx";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { toggleActiveDialog } from "../../redux/slices/nodeSlice";
 
 const Container = styled.div`
     display: flex;
@@ -13,6 +14,30 @@ const Container = styled.div`
     justify-content: ${(props) => (props.isUser ? 'flex-end' : 'flex-start')}; 
     margin: 10px;
     position: relative;
+`;
+
+const ToggleButton = styled.button`
+  position: absolute;
+  top: 5px;
+  right: ${(props) => (props.isUser ? '5px' : 'auto')};
+  left: ${(props) => (props.isUser ? 'auto' : '5px')};
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  border: none;
+  background-color: ${(props) =>
+    props.isActive ? '#2f855a' : '#f6b6b6'}; 
+  color: white;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0.9;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.isActive ? '#2f855a' : '#2f855a'}; 
+    opacity: 1;
+  }
 `;
 
 const Circle = styled.div`
@@ -88,7 +113,7 @@ const DialogBox = ({ text, isUser, nodeId, number }) => {
     const currentScrolledDialog = useSelector((state) => state.node.currentScrolledDialog);
     const contextMode = useSelector((state) => state.mode.contextMode);
     const nodeColors = useSelector((state) => state.node.nodeColors);
-
+    const dispatch = useDispatch();
     const isActive = activeDialogNumbers.includes(number);
     const isScrolled = currentScrolledDialog === number;
 
@@ -113,6 +138,18 @@ const DialogBox = ({ text, isUser, nodeId, number }) => {
 
     return (
         <Container isUser={isUser}>
+            {contextMode && isUser && (
+            <ToggleButton
+                isUser={isUser}
+                isActive={isActive}
+                onClick={(e) => {
+                e.stopPropagation();
+                dispatch(toggleActiveDialog(number)); // 질문 번호만 넘겨도 쌍으로 처리됨
+                }}
+            >
+                {isActive ? "On" : "Off"}
+            </ToggleButton>
+            )}
             <MessageBubble isUser={isUser} isActive={isActive} isScrolled={isScrolled} isContextMode={contextMode} activeColor={activeColor}>
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                     {text}
