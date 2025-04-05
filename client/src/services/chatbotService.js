@@ -29,13 +29,21 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
       history: filteredMessages,
     });
 
-    const { message: gptResponse, keyword } = response.data;
+    const { message: gptResponse } = response.data;
+    console.log("📌 GPT 응답:", { gptResponse });
 
-    if (!keyword) return gptResponse;
+    // 🔹 Step 2: /api/update-graph 호출하여 keyword, parentNodeId, relation 받아오기
+    const parentNode = await axios.post("http://localhost:8080/api/update-graph", {
+      nodes: filteredNodes,
+      userMessage: input,
+      gptMessage: gptResponse,
+    });
 
-    console.log("📌 GPT 응답:", { keyword, gptResponse });
+    const { keyword, parentNodeId, relation } = parentNode.data;
+    console.log(`📌 추출된 키워드: ${keyword}`);
+    console.log(`📌 ${keyword}의 부모 노드: ${parentNodeId}, 관계: ${relation}`);
 
-    // 🔹 Step 2: 동일한 키워드가 이미 있는지 체크
+    // 🔹 Step 3: 동일한 키워드가 이미 있는지 체크
     const existingNodeId = Object.keys(filteredNodes).find(
       (nodeId) => filteredNodes[nodeId].keyword === keyword
     );
@@ -73,16 +81,6 @@ export const sendMessageToApi = (input, previousMessages) => async (dispatch, ge
 
       return `${parentNodeId}-${maxSuffix + 1}`;
     };
-
-    const parentNode = await axios.post("http://localhost:8080/api/update-graph", {
-      nodes: filteredNodes,
-      keyword,
-      userMessage: input,
-      gptMessage: gptResponse,
-    });
-
-    const { parentNodeId, relation } = parentNode.data;
-    console.log(`📌 ${keyword}의 부모 노드: ${parentNodeId}, 관계: ${relation}`);
 
     const updatedNodes = getState().node.nodes;
     const newNodeId = generateNodeId(parentNodeId, updatedNodes);
