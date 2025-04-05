@@ -3,7 +3,8 @@ import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { sendMessageToApi } from "../services/chatbotService.js";
 import DialogBox from "../components/textBox/DialogBox.jsx";
-import { setCurrentScrolledDialog } from "../redux/slices/nodeSlice";
+import { setCurrentScrolledDialog, resetState} from "../redux/slices/nodeSlice";
+import { store } from "../redux/store.js"; 
 
 const ChatContainer = styled.div`
   display: flex;
@@ -79,6 +80,22 @@ const ArrowButton = styled.button`
   pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
 `;
 
+const SaveButton = styled.button`
+  position: fixed;
+  bottom: 160px;
+  right: 20px;
+  padding: 8px 12px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+`;
+
+const RestoreButton = styled(SaveButton)`
+  bottom: 210px;
+  background-color: #ed8936;
+`;
 
 function Chatbot() {
   const [messages, setMessages] = useState([]);
@@ -154,6 +171,30 @@ useEffect(() => {
   const activeNodeIds = useSelector((state) => state.node.activeNodeIds);
   const currentNodeId = activeNodeIds[activeNodeIds.length - 1] || "root";
 
+  const handleSaveState = () => {
+    const currentState = {
+      nodes: store.getState().node.nodes,
+      activeNodeIds: store.getState().node.activeNodeIds,
+      activeDialogNumbers: store.getState().node.activeDialogNumbers,
+      dialogCount: store.getState().node.dialogCount,
+      messages,
+    };
+  
+    localStorage.setItem("testBackup", JSON.stringify(currentState));
+    alert("✅ 상태 저장 완료!");
+  };
+  
+  const handleRestoreState = () => {
+    const saved = JSON.parse(localStorage.getItem("testBackup"));
+    if (!saved) return alert("❌ 저장된 상태가 없습니다.");
+  
+    dispatch(resetState(saved));
+    setMessages(saved.messages);
+    setCurrentIndex(saved.activeDialogNumbers.length - 1);
+    dispatch(setCurrentScrolledDialog(saved.activeDialogNumbers[saved.activeDialogNumbers.length - 1]));
+    alert("♻️ 상태 복원 완료!");
+  };
+
   const handleSend = async () => {
     if (input.trim() === "") return;
 
@@ -217,6 +258,8 @@ useEffect(() => {
           </ArrowButton>
         </ArrowContainer>
       )}
+          <SaveButton onClick={handleSaveState}>💾 저장</SaveButton>
+    <RestoreButton onClick={handleRestoreState}>♻️ 복원</RestoreButton>
       <InputContainer>
         <Input
           type="text"

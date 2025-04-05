@@ -136,6 +136,14 @@ const nodeSlice = createSlice({
     setCurrentScrolledDialog: (state, action) => {
       state.currentScrolledDialog = action.payload;
     },
+
+    resetState: (state, action) => {
+      const { nodes, activeNodeIds, activeDialogNumbers, dialogCount } = action.payload;
+      state.nodes = nodes;
+      state.activeNodeIds = activeNodeIds;
+      state.activeDialogNumbers = activeDialogNumbers;
+      state.dialogCount = dialogCount;
+    }  
   },
 
   extraReducers: (builder) => {
@@ -145,5 +153,5 @@ const nodeSlice = createSlice({
   },
 });
 
-export const { toggleActiveNode, addOrUpdateNode, setParentNode, setCurrentScrolledDialog } = nodeSlice.actions;
+export const { toggleActiveNode, addOrUpdateNode, setParentNode, setCurrentScrolledDialog, resetState } = nodeSlice.actions;
 export default nodeSlice.reducer;
