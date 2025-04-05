@@ -52,7 +52,7 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const response = await retryRequest(() => openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-3.5-turbo',
       messages: [
         { 
           role: "system", 
@@ -60,10 +60,6 @@ app.post('/api/chat', async (req, res) => {
         },
         ...previousMessages,
         { role: 'user', content: userPrompt },
-        { 
-          role: "system", 
-          content: "사용자의 질문과 너의 답변을 기반으로 관련된 키워드를 단 1개만 추출해서 JSON 형식으로 반환해줘. JSON 형식 예시는 다음과 같습니다:\n\n```json\n{\n  \"response\": \"GPT의 답변 내용\",\n  \"keyword\": \"키워드\"\n}\n```"
-        }
       ],
       max_tokens: 800,
       response_format: { type: "json_object" } 
@@ -76,26 +72,43 @@ app.post('/api/chat', async (req, res) => {
       console.error("❗️ GPT 응답이 비어 있음! 재시도...");
       throw new Error("Empty response from GPT");
     }
+  } catch (error) {
+    console.error('❌ Error generating response:', error);
+    res.status(500).send('Internal Server Error');
+  }
+
+  try {
+    const response = await retryRequest(() => openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'user', content: userPrompt },
+        { 
+          role: "system", 
+          content: "사용자의 질문과 너의 답변을 기반으로 관련된 키워드를 단 1개만 추출해서 JSON 형식으로 반환해줘. JSON 형식 예시는 다음과 같습니다:\n\n```json\n{\n  \"response\": \"keyword\": \"키워드\"\n}\n```"
+        },
+      ],
+      max_tokens:800,
+      response_format: { type: "json_object" }}))
 
     // 개별 node의 로그데이터 추출
-    const { prompt_tokens, completion_tokens } = response.usage;
-    const texts = userPrompt.length;
+  const { prompt_tokens, completion_tokens } = response.usage;
+  const texts = userPrompt.length;
 
-    user.nodes.push({
-      texts: texts,
-      prompt_tokens: prompt_tokens,
-      completion_tokens: completion_tokens,
-    })
-    await user.save();
+  user.nodes.push({
+    texts: texts,
+    prompt_tokens: prompt_tokens,
+    completion_tokens: completion_tokens,
+  })
+  await user.save();
 
-    const parsedResult = JSON.parse(gptResult); 
-    const gptResponse = parsedResult.response;
-    const keyword = parsedResult.keyword; 
+  const parsedResult = JSON.parse(gptResult); 
+  const gptResponse = parsedResult.response;
+  const keyword = parsedResult.keyword; 
 
-    console.log('✅ GPT Result:', gptResult);
-    console.log('✅ Keyword:', keyword);
+  console.log('✅ GPT Result:', gptResult);
+  console.log('✅ Keyword:', keyword);
 
-    res.json({ message: gptResponse, keyword });
+  res.json({ message: gptResponse, keyword });
      
   } catch (error) {
     console.error('❌ Error generating response:', error);
