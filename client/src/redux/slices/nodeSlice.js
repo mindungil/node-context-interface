@@ -26,6 +26,49 @@ const nodeSlice = createSlice({
   },
 
   reducers: {
+    toggleActiveDialog: (state, action) => {
+      const dialogNumber = action.payload;
+    
+      // 사용자 질문인지 확인 (홀수만 처리)
+      if (dialogNumber % 2 === 0) return; // 짝수면 (GPT 응답), 무시
+    
+      const questionNumber = dialogNumber;
+      const answerNumber = dialogNumber + 1;
+    
+      const isQuestionActive = state.activeDialogNumbers.includes(questionNumber);
+      const isAnswerActive = state.activeDialogNumbers.includes(answerNumber);
+    
+      const isPairActive = isQuestionActive && isAnswerActive;
+    
+      if (isPairActive) {
+        // 둘 다 비활성화
+        state.activeDialogNumbers = state.activeDialogNumbers.filter(
+          (n) => n !== questionNumber && n !== answerNumber
+        );
+      } else {
+        // 둘 다 추가
+        state.activeDialogNumbers.push(questionNumber);
+        state.activeDialogNumbers.push(answerNumber);
+      }
+    
+      // 🔁 노드 활성화 상태 재계산
+      const newActiveNodeIds = new Set();
+      Object.entries(state.nodes).forEach(([nodeId, node]) => {
+        const dialogNumbers = Object.keys(node.dialog).map(Number);
+        const hasActive = dialogNumbers.some((dn) => {
+          const q = (dn - 1) * 2 + 1;
+          const a = (dn - 1) * 2 + 2;
+          return state.activeDialogNumbers.includes(q) || state.activeDialogNumbers.includes(a);
+        });
+    
+        if (hasActive) {
+          newActiveNodeIds.add(nodeId);
+        }
+      });
+    
+      state.activeNodeIds = [...newActiveNodeIds];
+    },
+    
     toggleActiveNode: (state, action) => {
       const nodeIds = Array.isArray(action.payload) ? action.payload : [action.payload];
     
@@ -80,6 +123,20 @@ const nodeSlice = createSlice({
           console.log("🔥 [Redux] 활성화된 대화 번호 목록:", JSON.stringify(state.activeDialogNumbers));
           console.log("🔥 [Redux] 현재 스크롤된 대화 번호:", state.currentScrolledDialog);
         }
+
+        // 🔁 activeNodeIds 다시 계산
+        const newActiveNodeIds = new Set();
+        Object.entries(state.nodes).forEach(([nodeId, node]) => {
+          const dialogNumbers = Object.keys(node.dialog).map(Number);
+          const hasActive = dialogNumbers.some((dn) => {
+            const q = (dn - 1) * 2 + 1;
+            const a = (dn - 1) * 2 + 2;
+            return state.activeDialogNumbers.includes(q) || state.activeDialogNumbers.includes(a);
+          });
+          if (hasActive) newActiveNodeIds.add(nodeId);
+        });
+        state.activeNodeIds = [...newActiveNodeIds];
+
     
         console.log("✅ 활성화됨:", nodeId);
         console.log("🔥 활성화된 노드 목록:", JSON.stringify(state.activeNodeIds));
@@ -153,5 +210,5 @@ const nodeSlice = createSlice({
   },
 });
 
-export const { toggleActiveNode, addOrUpdateNode, setParentNode, setCurrentScrolledDialog, resetState } = nodeSlice.actions;
+export const { toggleActiveDialog, toggleActiveNode, addOrUpdateNode, setParentNode, setCurrentScrolledDialog, resetState } = nodeSlice.actions;
 export default nodeSlice.reducer;
