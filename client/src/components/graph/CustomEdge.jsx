@@ -41,13 +41,14 @@ const CustomEdge = ({
 
   const isActive = data?.isActive || false;
   const contextMode = data?.contextMode || false;
+  const yOffset = 4; 
 
   // 베지어 경로와 중앙점 계산
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
-    sourceY,
+    sourceY: sourceY + yOffset,
     targetX,
-    targetY,
+    targetY: targetY + yOffset,
     sourcePosition,
     targetPosition,
   });
