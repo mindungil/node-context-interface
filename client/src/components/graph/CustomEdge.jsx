@@ -12,6 +12,7 @@ const EdgeLabelContainer = styled.div`
   position: absolute;
   background-color: #fcfcfc;
   padding: 2px;
+  padding-bottom: 10px;
   border-radius: 50%;
   font-size: 14px;
   font-weight: 500;

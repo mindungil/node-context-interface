@@ -51,7 +51,7 @@ app.post('/api/chat', async (req, res) => {
         ...previousMessages,
         { role: 'user', content: userPrompt },
       ],
-      max_tokens: 800,
+      max_tokens: 1200,
     }));
 
     const gptResponse = response.choices[0].message.content;
@@ -75,9 +75,16 @@ app.post('/api/update-graph', async (req, res) => {
   const safeNodes = nodes || {};
   const existingKeywords = Object.values(safeNodes).map(node => node.keyword);
 
+  // ✅ safeNodes에서 dialog 등 불필요한 필드 제거 (id, keyword만 유지)
+  const simplifiedNodes = Object.fromEntries(
+    Object.entries(safeNodes).map(([id, node]) => {
+      return [id, { id, keyword: node.keyword }];
+    })
+  );
+
   console.log('📌 업데이트 요청 받음');
   console.log('📋 현재 노드 목록:', existingKeywords);
-  console.log('🗺️ 전달된 노드 데이터:', JSON.stringify(safeNodes, null, 2));
+  console.log('🗺️ 전달된 노드 데이터:', JSON.stringify(simplifiedNodes, null, 2));
 
   try {
     const response = await retryRequest(() => openai.chat.completions.create({
@@ -88,9 +95,9 @@ app.post('/api/update-graph', async (req, res) => {
           content: `
           다음 정보를 기반으로 사용자의 대화 키워드도 추출하고,
           그래프 업데이트 정보를 생성하세요.
-
-          1. 대화 기반으로 관련된 키워드 1개만 JSON 형태로 추출하세요.
-          2. 그래프 내 어디에 연결되어야 할지 판단하고, 가장 연관된 부모 노드를 찾아 관계도 설정하세요.
+          
+          1. 현재 그래프 상태와 존재하는 노드 목록을 참고해서, 최근 대화 내용이 어떤 노드(키워드)에 들어가야 하는지 판단하시오
+          2. 판단한 근거로 최근 대화 내용의 키워드를 정한 다음, 그래프 내 어디에 연결되어야 할지 판단하고, 가장 연관된 부모 노드를 찾아 관계도 설정하세요.
           3. 관계는 한 단어 또는 짧은 구로 표현하세요.
 
           반드시 아래 형식으로 응답하세요:
@@ -103,11 +110,11 @@ app.post('/api/update-graph', async (req, res) => {
           \`\`\`
         `
         },
-        { role: 'user', content: `현재 그래프 상태: ${JSON.stringify(safeNodes)}` },
+        { role: 'user', content: `현재 그래프 상태: ${JSON.stringify(simplifiedNodes)}` },
         { role: 'user', content: `현재 존재하는 노드 목록: ${JSON.stringify(existingKeywords)}` },
         { role: 'user', content: `최근 대화 내용: ${JSON.stringify({ userMessage, gptMessage })}` }
       ],
-      max_tokens: 800,
+      max_tokens: 1200,
       response_format: { type: "json_object" } 
     }));
 
