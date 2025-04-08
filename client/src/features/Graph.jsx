@@ -70,10 +70,10 @@ function Graph() {
     const updatedNodes = [];
     const updatedEdges = [];
 
-    const spacingX = 250;
+    const spacingX = 340;
     const spacingY = 100;
     let currentY = 10000;
-
+    
     Object.values(nodeMap).forEach((node) => {
       if (node.parent) {
         if (!childrenMap[node.parent]) childrenMap[node.parent] = [];
@@ -111,6 +111,7 @@ function Graph() {
         yPos = (top + bottom) / 2;
       }
 
+      
       positionedMap[nodeId] = {
         x: depth * spacingX,
         y: yPos,
