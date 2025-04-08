@@ -80,10 +80,17 @@ const ArrowButton = styled.button`
   pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
 `;
 
-const SaveButton = styled.button`
+const ButtonContainer = styled.div`
   position: fixed;
-  bottom: 160px;
+  top: 20px;
   right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+`;
+
+
+const SaveButton = styled.button`
   padding: 8px 12px;
   background-color: #4299e1;
   color: white;
@@ -93,7 +100,6 @@ const SaveButton = styled.button`
 `;
 
 const RestoreButton = styled(SaveButton)`
-  bottom: 210px;
   background-color: #ed8936;
 `;
 
@@ -259,8 +265,11 @@ useEffect(() => {
           </ArrowButton>
         </ArrowContainer>
       )}
-          <SaveButton onClick={handleSaveState}>💾 저장</SaveButton>
-    <RestoreButton onClick={handleRestoreState}>♻️ 복원</RestoreButton>
+
+      <ButtonContainer>
+        <SaveButton onClick={handleSaveState}>💾 저장</SaveButton>
+        <RestoreButton onClick={handleRestoreState}>♻️ 복원</RestoreButton>
+      </ButtonContainer>
       <InputContainer>
         <Input
           type="text"

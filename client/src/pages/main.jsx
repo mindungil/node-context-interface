@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import Chatbot from "../features/Chatbot.jsx";
 import Graph from "../features/Graph.jsx";
@@ -40,20 +40,45 @@ const GraphContainer = styled.div`
   background-color: rgba(226, 226, 226, 0.1);
 `;
 
+const GraphToggleButton = styled.div`
+    position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  background-color:rgb(106, 104, 104);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  &:hover {
+    background-color:rgb(115, 135, 141);
+  } 
+`;
+
 function Main() {
+  const [showGraph, setShowGraph] = useState(false);
+
   return (
-    <Container>
-      <GraphSection>
-        <GraphContainer>
-          <Graph/>
-        </GraphContainer>
-      </GraphSection>
-      <ChatSection>
-        <ChatContainer>
-          <Chatbot/>
-        </ChatContainer>
-      </ChatSection>
-    </Container>
+    <>
+      <GraphToggleButton onClick={() => setShowGraph(prev => !prev)}>
+        {showGraph ? "🕶️" : "👀"}
+      </GraphToggleButton>
+
+      <Container>
+        {showGraph && <GraphSection>
+          <GraphContainer>
+            <Graph/>
+          </GraphContainer>
+        </GraphSection>}
+        <ChatSection>
+          <ChatContainer>
+            <Chatbot/>
+          </ChatContainer>
+        </ChatSection>
+      </Container>
+    </>
   );
 }
 
