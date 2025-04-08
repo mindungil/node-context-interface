@@ -110,6 +110,7 @@ function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);  // 🔥 현재 활성 대화 인덱스
+  const [sendLock, setSendLock] = useState(true); // 응답 전까지 보내기 버튼 비 활성화
   const messagesEndRef = useRef(null);
   const messageRefs = useRef([]);  // 🔥 메시지별 Ref 배열
   const dispatch = useDispatch();
@@ -207,6 +208,7 @@ useEffect(() => {
 
   const handleSend = async () => {
     if (input.trim() === "") return;
+    setSendLock(false); // 메시지 비활성화
 
     const userMessage = {
       role: "user",
@@ -232,6 +234,7 @@ useEffect(() => {
     } catch (error) {
       console.error("Error sending message:", error);
     }
+    setSendLock(true); //메시지 비활성화 해제
   };
 
   const handleKeyDown = (e) => {
@@ -280,7 +283,7 @@ useEffect(() => {
         <RestoreButton onClick={handleRestoreState}>♻️ 복원</RestoreButton>
       </ButtonContainer>
       <InputContainer>
-        <Input
+        {sendLock && <Input
           type="text"
           value={input}
           onChange={(e) => 
@@ -288,10 +291,10 @@ useEffect(() => {
           }
           onKeyDown={handleKeyDown}
           placeholder="메세지 입력하기"
-        />
-        <Button onClick={handleSend}>
+        />}
+        {sendLock && <Button onClick={handleSend}>
           <span className="material-symbols-outlined md-white md-24">arrow_upward</span>
-        </Button>
+        </Button>}
       </InputContainer>
     </ChatContainer>
   );
