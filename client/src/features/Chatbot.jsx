@@ -33,14 +33,17 @@ const InputContainer = styled.div`
   background-color: #f0f0f0;
 `;
 
-const Input = styled.input`
-  height: 20px;
+//input은 줄넘김 하는 기능이 없음
+const Input = styled.textarea`
+  max-height: 28px;
+  min-height: 20px;
   flex: 1;
   border: none;
   background-color: #f0f0f0;
   margin-right: 10px;
   font-size: 16px;
   font-family: "Pretendard";
+  resize: none;
 
   &:focus {
     outline: none;
@@ -233,7 +236,13 @@ useEffect(() => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      handleSend();
+      if(e.shiftKey) {
+        return;
+      }
+      else{
+        e.preventDefault();
+        handleSend();
+      }
     }
   };
   
@@ -274,7 +283,9 @@ useEffect(() => {
         <Input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => 
+            setInput(e.target.value)
+          }
           onKeyDown={handleKeyDown}
           placeholder="메세지 입력하기"
         />
