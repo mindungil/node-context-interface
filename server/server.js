@@ -96,9 +96,9 @@ app.post('/api/chat', async (req, res) => {
     try {
       const summaryResponse = await retryRequest(() =>
         openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o",
           messages: [
-            { role: "system", content: "다음 대화를 이전 요약과 함께 간결하게 다시 요약해줘." },
+            { role: "system", content: "다음 대화를 이전 요약과 함께 간결하고 명확하게, 토큰 한도를 넘기지 않도록 요약해줘." },
             ...toSummarize,
           ],
           max_tokens: 300,
