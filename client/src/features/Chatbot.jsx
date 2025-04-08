@@ -5,6 +5,7 @@ import { sendMessageToApi } from "../services/chatbotService.js";
 import DialogBox from "../components/textBox/DialogBox.jsx";
 import { setCurrentScrolledDialog, resetState} from "../redux/slices/nodeSlice";
 import { store } from "../redux/store.js"; 
+import sendLogData from "../logData.js";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -223,6 +224,8 @@ useEffect(() => {
     } catch (error) {
       console.error("Error sending message:", error);
     }
+
+    sendLogData('send-message');
   };
 
   const handleKeyDown = (e) => {

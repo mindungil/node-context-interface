@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleLinearMode, toggleTreeMode } from "../../redux/slices/modeSlice";
+import sendLogData from "../../logData";
 
 const ButtonGroupContainer = styled.div`
   position: absolute;
@@ -44,14 +45,18 @@ const ButtonGroup = () => {
   const nodeMode = !linearMode && !treeMode;
 
   const handleLinearToggle = () => {
+    sendLogData('toggle_linear');
     dispatch(toggleLinearMode());
   };
 
   const handleTreeToggle = () => {
+    sendLogData('toggle_tree');
     dispatch(toggleTreeMode());
   };
 
   const handleNodeToggle = () => {
+    // 클릭이 안 되더라도 상호작용 수 기록!
+    sendLogData('toggle_node');
     if (linearMode) dispatch(toggleLinearMode());
     if (treeMode) dispatch(toggleTreeMode());
   };

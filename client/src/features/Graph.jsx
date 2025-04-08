@@ -9,6 +9,8 @@ import CustomTooltipNode from "../components/tooltip-node/TooltipNode";
 import ToggleButton from "../components/button/ToggleButton";
 import { toggleContextMode } from "../redux/slices/modeSlice";
 import { setNodeColors } from "../redux/slices/nodeSlice";
+import logData from '../logData';
+import sendLogData from "../logData";
 
 const edgeTypes = {
   custom: CustomEdge,
@@ -58,6 +60,7 @@ function Graph() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const handleToggle = () => {
+    sendLogData('context_management');
     dispatch(toggleContextMode());
   };
 
@@ -225,6 +228,8 @@ function Graph() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
+        onNodeClick={(event, edge) => sendLogData('node')}
+        // onEdgeClick={(event, edge) => sendLogData('edge')}
       >
         <Background variant="dots" gap={20} size={1.5} color="#ddd" />
         <Controls />

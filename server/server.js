@@ -4,7 +4,7 @@ const path = require('path');
 const OpenAI = require('openai');
 const cors = require('cors'); 
 const mongoose = require('mongoose');
-const { User } = require('./models');
+const User = require('./models');
 
 const app = express();
 app.use(cors());
@@ -23,6 +23,19 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // 🔥 로그데이터 확인을 위한 User 생성
 const user = new User()
+
+// client 측 로그데이터 받는 api
+app.post('/api/logdata', async (req, res) => {
+  const fieldName = req.body.data;
+
+  user.client[fieldName] += 1
+  await user.save();
+
+  console.log(`${fieldName} field -> 상호작용 카운트`);
+  res.status(200).json({
+    sucess: true
+  });
+});
 
 // 🟢 재시도 함수 - 응답 비어있을 때도 재시도
 async function retryRequest(callback, maxRetries = 5) {
